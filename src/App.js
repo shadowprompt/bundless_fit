@@ -91,7 +91,7 @@ function App() {
             </header>
             <div className="app-logo">
                 <div className="img-box">
-                    <img src="https://p3-sign.toutiaoimg.com/tos-cn-i-qvj2lq49k0/f00c796ee2da45b5aa30d5442e0d1556~tplv-obj:500:500.image?_iz=97245&from=post&x-expires=1697846400&x-signature=h1hOaYD0nLJCWu28il5RkqP3y70%3D"
+                    <img src="https://p3-sign.toutiaoimg.com/tos-cn-i-qvj2lq49k0/87619a6292d54235bea51825c3f3bb9d~tplv-obj:500:500.image?_iz=97245&from=post&x-expires=1697932800&x-signature=SxteyYanO5kWU08vdsV7MgzEhG8%3D"
                          title="转换格式" alt=""/>
                 </div>
             </div>
@@ -100,7 +100,7 @@ function App() {
                     每一次运动锻炼了我们的身体，值得留存在我们的记录里，不负每一滴汗水，尊重每一次付出。
                 </p>
                 <p>
-                    本工具旨在为各位跑友转换运动记录数据，支持将<b>华为运动健康</b>、<b>Zepp Life（原小米运动）</b>官方导出的运动数据转换成业内通用的tcx或fit（推荐）格式，然后即可顺利导入主流的运动平台，比如高驰、佳明、RQrun、Strava等。
+                    本工具旨在为各位跑友转换运动记录数据，支持将<b>华为运动健康</b>、<b>Zepp Life（原小米运动）</b>官方导出的运动数据转换成业内通用的fit（推荐）或tcx格式，然后即可顺利导入主流的运动平台，比如高驰、佳明、RQrun、Strava等。
                 </p>
                 <p>
                     将官方的导出数据解压后，选择其中的特定数据文件（具体见待上传压缩包结构说明）打包至一个新的zip压缩包，上传至本工具即可开始转换。
