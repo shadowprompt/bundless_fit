@@ -1,0 +1,40 @@
+component: http
+name: http-express-xxkkV94NEx
+inputs:
+  src:
+    src: ./
+    exclude:
+      - .env
+  faas:
+    framework: express
+    name: '${name}'
+    runtime: Nodejs12.16
+    eip: false
+    timeout: 3
+    memorySize: 512
+    tags: []
+    environments: []
+    layers:
+      - name: '${output:${stage}:${app}:running-layer.name}'
+        version: '${output:${stage}:${app}:running-layer.version}'
+  apigw:
+    protocols:
+      - http
+      - https
+    timeout: 60
+    environment: release
+    customDomains:
+      - domain: fit.bundless.cn
+        certId: 7EPobIA2
+        protocols:
+          - https
+        pathMap:
+          - path: /
+            environment: release
+        customMap: true
+        isDefaultMapping: false
+  region: ap-guangzhou
+  isAutoCiDeploy: false
+org: '1251009159'
+app: running
+stage: dev
