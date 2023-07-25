@@ -9,6 +9,31 @@ const FIT_EPOCH_MS = 631065600000; // fit格式时间与标准时间戳的差值
 
 let fileCreatedCount = 0;
 
+// 从网上找到的零星数据，可能不全
+const sportTypeTcxMap = {
+    257: 'Walking', // 户外步行
+    258: 'Running', // 户外跑步
+    259: 'Biking', // 骑自行车
+    264: 'Running', // Treadmill 室内跑步（跑步机）
+    // 265: 'IndoorBike', // 室内骑自行车
+    // 273: 'CrossTrainer ', // 椭圆机
+    // 274: 'RowMachine', // 划船机
+    // 290: 'Rower', // 划船机划水模式
+    // 291: 'Rowerstrength', // 划船机力量模式
+    279: 'MultiSport', // 其它运动 不好归类的都在此类
+    // 281: 'Walking', // 室内步行
+    // 283: 'RopeSkipping', // 跳绳
+    // 129: 'Badminton', // 羽毛球
+};
+
+const sportTypeFitActivityTypeMap = {
+    258: 1, // 跑步
+    264: 1,
+    259: 2, // 骑自行车
+    265: 2,
+    // 其它 0
+};
+
 function mkdirsSync(dirname) {
     if (fs.existsSync(dirname)) {
         return true;
@@ -54,7 +79,13 @@ function makeTCX(basePath, jsonFileName, totalLength) {
     data = JSON.parse(data.toString())
     const { trackList = [], simplifyValue } = data;
 
+    if (trackList.length === 0) {
+        return;
+    }
+
     const utcTime = trackList[0].Time;
+    // 兜底generic
+    const sportTypeStr = sportTypeTcxMap[simplifyValue.sportType] || sportTypeTcxMap[259];
 
     const obj = {
         'TrainingCenterDatabase': {
@@ -67,7 +98,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
             Activities: {
                 Activity: {
                     $: {
-                        Sport: "Running",
+                        Sport: sportTypeStr,
                     },
                     Id: utcTime,
                     Lap: {
@@ -117,6 +148,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
     let data = fs.readFileSync(`${basePath}/json/${jsonFileName}`);
     data = JSON.parse(data.toString())
     const { trackList = [], simplifyValue } = data;
+    if (trackList.length === 0) {
+        return;
+    }
     const firstTrack = trackList[0] || {};
     const startTimeTs = new Date(firstTrack.Time).getTime();
     const startTimeFit = parseInt((startTimeTs - FIT_EPOCH_MS) / 1000);
@@ -127,6 +161,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
     const heartRateSummary = getSummaryFromList(heartRateList);
     const cadenceList = trackList.filter(item => item.Cadence).map(item => [1, item.Cadence]);
     const cadenceSummary = getSummaryFromList(cadenceList);
+    // 兜底generic
+    const activeType = sportTypeFitActivityTypeMap[simplifyValue.sportType] || 0;
 
 
     const fieldList = ['Field', 'Value', 'Units'];
@@ -204,7 +240,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         if (index === 0) {
             infoList.push(
                 gen([['Definition', 0, 'record'], ['timestamp', 1], ['distance', 1], ['activity_type', 1]]),
-                gen([['Data', 0, 'record'], ['timestamp', timeFit, 's'], ['distance', 0, 'm'], ['activity_type', 1]]),
+                gen([['Data', 0, 'record'], ['timestamp', timeFit, 's'], ['distance', 0, 'm'], ['activity_type', activeType]]),
             )
         }
 
@@ -265,15 +301,20 @@ async function pack(baseDir, address, info) {
     mkdirsSync(path.join(baseDir, 'csv'));
     mkdirsSync(path.join(baseDir, 'fit'));
     await runDirs(baseDir);
-    const url = `${baseUrl}/fit.zip`;
-    makeZip(baseDir + '/fit', `${baseFilePath}/${fileName}/fit.zip`).then(() => {
-        console.log('zip success', `${baseFilePath}/${fileName}/fit.zip`);
+    Promise.all([
+        makeZip(baseDir + '/fit', `${baseFilePath}/${fileName}/fit.zip`),
+        makeZip(baseDir + '/tcx', `${baseFilePath}/${fileName}/tcx.zip`),
+    ]).then(() => {
+        const fitUrl = `${baseUrl}/fit.zip`;
+        const tcxUrl = `${baseUrl}/tcx.zip`;
+
+        console.log('zip success', `${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
         sendMail('qq', {
             from: "justnotify@qq.com",
             to: address,
             subject: "运动记录转换完成通知 https://fit.bundless.cn",
             // text: "Plaintext version of the message",
-            html: `您提交的运动记录已经成功转换成fit和tcx格式，结果文件已经准备好了，下载地址<a href="${url}" target="_blank">${url}</a>`,
+            html: `您提交的运动记录已经成功转换成fit和tcx格式，结果文件已经准备好了，fit格式结果下载地址<a href="${fitUrl}" target="_blank">${fitUrl}</a>，tcx格式结果下载地址<a href="${tcxUrl}" target="_blank">${tcxUrl}</a>`,
         });
     }).catch(err => {
         console.log('zip error', err);

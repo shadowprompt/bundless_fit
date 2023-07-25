@@ -7,7 +7,8 @@ const {mkdirsSync} = require("./tools");
 
 mkdirsSync('/tmp/fit_upload_temp');
 const upload = multer({ dest: '/tmp/fit_upload_temp/' });
-const huaweiParser = require('./huaweiParser');
+const huaweiHandler = require('./huaweiHandler');
+const zeppHandler = require('./zeppHandler');
 const app = express()
 
 app.use(cors())
@@ -34,18 +35,19 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       const originalName = file.originalname;
       const list = originalName.split('.');
       const ext = list[list.length - 1];
-      const ts = 'file_' + Date.now();
+      const fileName = 'file_' + Date.now();
       const baseFilePath = `/tmp/fit_upload`;
       mkdirsSync(baseFilePath);
-      const targetPath= `${baseFilePath}/${ts}.${ext}`;
+      const targetPath= `${baseFilePath}/${fileName}.${ext}`;
       //使用同步方式重命名一个文件
       fs.renameSync(file.path, targetPath);
-      console.log('successfully rename the file to ', file.path, targetPath);
-      return huaweiParser.preCheck(targetPath).then(result => {
-        const baseUrl = `https://fit.bundless.cn/fit_upload/${ts}`;
+      console.log('successfully rename the file to ', file.path, targetPath, req.body.type);
+      const handler = req.body.type === 'huawei' ? huaweiHandler : zeppHandler;
+      return handler.preCheck(targetPath).then(result => {
+        const baseUrl = `https://fit.bundless.cn/fit_upload/${fileName}`;
 
         Promise.resolve().then(() => {
-          huaweiParser.parser({
+          handler.parser({
             data: {
               requestBody: {
                 address: req.body.address,
@@ -53,7 +55,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
                   baseFilePath,
                   filePath: targetPath,
                   baseUrl,
-                  fileName: ts,
+                  fileName,
                 }
               }
             }

@@ -10,6 +10,14 @@ const { runDirs } = require('./tools');
 const {makeZip, sendMail} = require("./mail");
 
 const MINUTE_OFFSET = 6000; // 分钟误差（毫秒）
+// 映射成跟huawei统一的，方便统一处理
+const sportType2HuaweiMap = {
+    1: 258, // 'Running',
+    6: 257, // 'Walking',
+    8: 264, // 'Running', // 室内跑步（跑步机）
+    9: 259, // 'Biking',
+    16: 279, // 'MultiSport', // 自由活动
+};
 
 function getItem(result) {
     const value = (result && result.v || '') + '';
@@ -157,13 +165,6 @@ function getSummaryFromList(list) {
 function collectData(sportInfo, baseDir, detailJsonObj) {
     const { heartRateMap, stepMap, activityStageMap } = detailJsonObj;
     let [sportType, sportStartTime, sportTime, maxPace, minPace, distance, avgPace, calories] = sportInfo;
-    const sportTypeMap = {
-        1: 'Running',
-        6: 'Walking',
-        8: 'IndoorRunning', // 跑步机
-        9: 'Biking',
-        16: 'MultiSport', // 自由活动
-    };
 
     const {year, month, day, hours, minutes, seconds} = getDateTime(sportStartTime);
     const date = `${year}-${month}-${day}`;
@@ -229,7 +230,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         totalCalories: calories * 1000,
         avgHeartRate: heartRateSummary.avg,
         maxHeartRate: heartRateSummary.max,
-        sportType,
+        sportType: sportType2HuaweiMap[sportType] || sportType2HuaweiMap[1],
     }
 
     mkdirsSync(path.join(baseDir, 'json'));
