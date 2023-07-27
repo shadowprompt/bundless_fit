@@ -38,9 +38,14 @@ function getDateTime(s) {
 function calcDateFlag(data) {
     let dateT;
     if (data.tp === 'lbs') {
-        let [value, b] = data.t.split('E');
-        value = value.padEnd(11, '0'); // 补齐成统一的11位
-        dateT = value.slice(0, 11) + 'E12';
+        // 可能包含E，也可能直接是时间戳
+        if (data.t.includes('E')) {
+            let [value, b] = data.t.split('E');
+            value = value.padEnd(11, '0'); // 补齐成统一的11位
+            dateT = value.slice(0, 11) + 'E12';
+        } else {
+            dateT = data.t;
+        }
     } else {
         dateT = data.k.slice(0,10) + '000';
     }
@@ -87,8 +92,8 @@ function collectData(motion, baseDir) {
             if (data.tp === 'lbs' && data.lat && data.lon > 0 ) {
                 // 实测发现华为批量导出的经纬度不准，需要修正 维度 + 0.002075，经度 - 0.004345
                 targetTrack.Position = {
-                    LatitudeDegrees: data.lat * 1 + 0.002075, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
-                    LongitudeDegrees: data.lon * 1 - 0.004345,
+                    LatitudeDegrees: data.lat, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
+                    LongitudeDegrees: data.lon,
                 }
             } else if(data.tp === 'h-r') {
                 targetTrack.HeartRateBpm = {

@@ -301,7 +301,6 @@ async function pack(baseDir, address, info) {
     mkdirsSync(path.join(baseDir, 'csv'));
     mkdirsSync(path.join(baseDir, 'fit'));
     await runDirs(baseDir);
-    return;
     Promise.all([
         makeZip(baseDir + '/fit', `${baseFilePath}/${fileName}/fit.zip`),
         makeZip(baseDir + '/tcx', `${baseFilePath}/${fileName}/tcx.zip`),
