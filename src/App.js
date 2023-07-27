@@ -137,6 +137,23 @@ function App() {
                     <Upload onRemove={onRemove} beforeUpload={beforeUpload} fileList={fileList} accept="zip" maxCount={1}>
                         <Button icon={<UploadOutlined />}>选择文件</Button>
                     </Upload>
+
+                    {
+                        (fileList.length === 0 || !address) && (
+                            <div>
+                                {
+                                    (fileList.length === 0) && (
+                                        <div style={{color: "red"}}>请选择zip包（需要符合指定的文件结构）</div>
+                                    )
+                                }
+                                {
+                                    (!address) && (
+                                        <div style={{color: "red"}}>请填写邮箱地址，转换结果将发送至邮箱内</div>
+                                    )
+                                }
+                            </div>
+                        )
+                    }
                     <Button
                         type="primary"
                         onClick={handleUpload}
