@@ -3,6 +3,8 @@ const xml2js = require('xml2js');
 const converter = require('json-2-csv');
 const { exec } = require('child_process');
 const path = require("path");
+
+const gpsTransformer = require('./gpsTransformer');
 const {makeZip, sendMail} = require("./mail");
 
 const FIT_EPOCH_MS = 631065600000; // fit格式时间与标准时间戳的差值
@@ -33,6 +35,10 @@ const sportTypeFitActivityTypeMap = {
     265: 2,
     // 其它 0
 };
+// 不转换坐标，仅以类似格式返回
+function justReturnPosition(LongitudeDegrees, LatitudeDegrees) {
+    return [LongitudeDegrees, LatitudeDegrees];
+}
 
 function mkdirsSync(dirname) {
     if (fs.existsSync(dirname)) {
@@ -123,7 +129,22 @@ function makeTCX(basePath, jsonFileName, totalLength) {
                         },
                         TriggerMethod: 'Time',
                         Track: {
-                            Trackpoint: trackList,
+                            Trackpoint: trackList.map(item => {
+                                // 加入gcj02坐标系转换为wgs84
+                                if (item.Position && item.Position.positionType) {
+                                    const transformer = item.Position.positionType === 'gcj02' ? gpsTransformer.gcj02towgs84 : justReturnPosition;
+                                    const [LongitudeDegrees, LatitudeDegrees] = transformer(item.Position.LongitudeDegrees, item.Position.LatitudeDegrees);
+                                    return {
+                                        ...item,
+                                        Position: {
+                                            LongitudeDegrees,
+                                            LatitudeDegrees,
+                                        }
+                                    }
+                                } else {
+                                    return item;
+                                }
+                            }),
                         },
                     }
                 }
@@ -190,9 +211,12 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         ];
 
         if (item.Position) {
+            // 加入gcj02坐标系转换为wgs84
+            const transformer = item.Position.positionType === 'gcj02' ? gpsTransformer.gcj02towgs84 : justReturnPosition;
+            const [LongitudeDegrees, LatitudeDegrees] = transformer(item.Position.LongitudeDegrees, item.Position.LatitudeDegrees);
             eachList.push(
-                ['position_lat', parseInt(item.Position.LatitudeDegrees * ( Math.pow(2, 31) / 180 )), 'semicircles'],
-                ['position_long', parseInt(item.Position.LongitudeDegrees * ( Math.pow(2, 31) / 180 )), 'semicircles'],
+                ['position_lat', parseInt(LatitudeDegrees * ( Math.pow(2, 31) / 180 )), 'semicircles'],
+                ['position_long', parseInt(LongitudeDegrees * ( Math.pow(2, 31) / 180 )), 'semicircles'],
             )
         }
         if (item.HeartRateBpm) {

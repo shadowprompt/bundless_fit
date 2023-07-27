@@ -94,6 +94,7 @@ function collectData(motion, baseDir) {
                 targetTrack.Position = {
                     LatitudeDegrees: data.lat, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
                     LongitudeDegrees: data.lon,
+                    positionType: 'gcj02', // 增加一个type标记当前坐标系，方便后续转换
                 }
             } else if(data.tp === 'h-r') {
                 targetTrack.HeartRateBpm = {
