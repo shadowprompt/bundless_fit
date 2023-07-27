@@ -271,7 +271,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         mkdirsSync(`${basePath}/fit/${simplifyValue.sportType}`);
         // 在腾讯云linux上java的路径和本机mac不同
         const javaPath = process.env.NODE_ENV === 'development' ? 'java' : '/usr/local/java/bin/java';
-        const jarPath = path.join(__dirname, '../FitCSVTool.jar')
+        const jarPath = path.join(__dirname, './FitCSVTool.jar')
         const command = `${javaPath} -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
         // const command = `java -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
         console.log('write csv success', commonFileName);
@@ -301,6 +301,7 @@ async function pack(baseDir, address, info) {
     mkdirsSync(path.join(baseDir, 'csv'));
     mkdirsSync(path.join(baseDir, 'fit'));
     await runDirs(baseDir);
+    return;
     Promise.all([
         makeZip(baseDir + '/fit', `${baseFilePath}/${fileName}/fit.zip`),
         makeZip(baseDir + '/tcx', `${baseFilePath}/${fileName}/tcx.zip`),

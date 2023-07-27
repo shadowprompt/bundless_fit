@@ -84,11 +84,11 @@ function collectData(motion, baseDir) {
                 }
                 trackList.push(targetTrack);
             }
-
             if (data.tp === 'lbs' && data.lat && data.lon > 0 ) {
+                // 实测发现华为批量导出的经纬度不准，需要修正 维度 + 0.002075，经度 - 0.004345
                 targetTrack.Position = {
-                    LatitudeDegrees: data.lat, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
-                    LongitudeDegrees: data.lon,
+                    LatitudeDegrees: data.lat * 1 + 0.002075, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
+                    LongitudeDegrees: data.lon * 1 - 0.004345,
                 }
             } else if(data.tp === 'h-r') {
                 targetTrack.HeartRateBpm = {

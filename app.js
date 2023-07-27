@@ -3,12 +3,12 @@ const path = require('path')
 const multer = require('multer');
 const fs = require("fs");
 const cors = require('cors');
-const {mkdirsSync} = require("./tools");
+const {mkdirsSync} = require("./node/tools");
 
 mkdirsSync('/tmp/fit_upload_temp');
 const upload = multer({ dest: '/tmp/fit_upload_temp/' });
-const huaweiHandler = require('./huaweiHandler');
-const zeppHandler = require('./zeppHandler');
+const huaweiHandler = require('./node/huaweiHandler');
+const zeppHandler = require('./node/zeppHandler');
 const app = express()
 
 app.use(cors())
