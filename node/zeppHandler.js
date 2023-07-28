@@ -19,6 +19,20 @@ const sportType2HuaweiMap = {
     16: 279, // 'MultiSport', // 自由活动
 };
 
+function getRefInfo(ref) {
+    const [startCellName, endCellName] = ref.split(':');
+    const startNum = startCellName.split(/[A-Z]/)[1];
+    const startLetter = startCellName.replace(startNum, '');
+    const endNum = endCellName.split(/[A-Z]/)[1];
+    const endLetter = endCellName.replace(endNum, '');
+    return {
+        startNum,
+        startLetter,
+        endNum,
+        endLetter
+    };
+}
+
 function getItem(result) {
     const value = (result && result.v || '') + '';
     return value.trim();
@@ -90,60 +104,108 @@ function collectDetailMap(sportInfo, filePath, resultMap, detailType) {
 
     const sheetList = detailType === 'activityStage' ? ['A', 'B', 'C', 'D', 'E', 'F'] : ['A', 'B', 'C'];
 
-    for (let key in firstSheet) {
-        const keyLetter = key[0];
-        const keyNumber = key.slice(1);
-        /* 带!的属性（比如!ref）是表格的特殊属性，用来输出表格的信息，不是表格的内容，所以去掉 */
+    const refInfo = firstSheet['!ref'];
+    const { startNum, endNum } = getRefInfo(refInfo);
+    for (let keyNumber = startNum + 1;keyNumber <= endNum; keyNumber++) {
+        let [date, ...rest] = getValue(sheetList.map(item => item + '' + keyNumber), firstSheet);
+        const { year, month, day } = getDateTime(date);
+        date = `${year}-${month}-${day}`;
+        // 如果心率日期已经大于运动日期，则无需继续查找
+        if (new Date(`${date} 00:00:00`) > new Date(`${startDate} 00:00:00`)) {
+            break;
+        }
 
-        if (keyLetter === '!') continue;
-
-        // 判断是否是首列，同一行的数据均在首列处理
-        if (keyLetter === 'A' && keyNumber != 1) {
-            let [date, ...rest] = getValue(sheetList.map(item => item + '' + keyNumber), firstSheet);
-            const { year, month, day } = getDateTime(date);
-            date = `${year}-${month}-${day}`;
-            // 如果心率日期已经大于运动日期，则无需继续查找
-            if (new Date(`${date} 00:00:00`) > new Date(`${startDate} 00:00:00`)) {
-                break;
-            }
-
-            if (date === startDate) {
-                if (detailType === 'activityStage') {
-                    const [_startTime, _stopTime] = rest;
-                    const _startTs = new Date(`${date} ${_startTime}:00`).getTime();
-                    const _stopTs = new Date(`${date} ${_stopTime}:00`).getTime();
-                    // 当前stage的开始时间大于等于运动开始时间（或仅稍微小MINUTE_OFFSET）+
-                    // 当前stage的结束时间小于等于运动结束时间（或仅稍微大MINUTE_OFFSET）
-                    const [a1, a2, b1, b2] = startStopMatch(_startTs, _stopTs, startTs, endTs);
-                    if ((a1 || a2) && (b1 || b2)) {
-                        if (!resultMap[startDate]) {
-                            resultMap[startDate] = {
-                                date: date,
-                                type: sportType,
-                                list: [],
-                            }
+        if (date === startDate) {
+            if (detailType === 'activityStage') {
+                const [_startTime, _stopTime] = rest;
+                const _startTs = new Date(`${date} ${_startTime}:00`).getTime();
+                const _stopTs = new Date(`${date} ${_stopTime}:00`).getTime();
+                // 当前stage的开始时间大于等于运动开始时间（或仅稍微小MINUTE_OFFSET）+
+                // 当前stage的结束时间小于等于运动结束时间（或仅稍微大MINUTE_OFFSET）
+                const [a1, a2, b1, b2] = startStopMatch(_startTs, _stopTs, startTs, endTs);
+                if ((a1 || a2) && (b1 || b2)) {
+                    if (!resultMap[startDate]) {
+                        resultMap[startDate] = {
+                            date: date,
+                            type: sportType,
+                            list: [],
                         }
-                        resultMap[startDate].list.push(rest);
-                        console.log(sportStartTime, sportTime, '/', detailType, startDate, _startTime, _stopTime, a1, a2, b1, b2);
                     }
-                } else {
-                    const [_time] = rest;
-                    const _ts = new Date(`${date} ${_time}:00`).getTime();
-                    if ( _ts >= startTs && _ts <= endTs) {
-                        if (!resultMap[startDate]) {
-                            resultMap[startDate] = {
-                                date: date,
-                                type: sportType,
-                                list: [],
-                            }
+                    resultMap[startDate].list.push(rest);
+                    console.log(sportStartTime, sportTime, '/', detailType, startDate, _startTime, _stopTime, a1, a2, b1, b2);
+                }
+            } else {
+                const [_time] = rest;
+                const _ts = new Date(`${date} ${_time}:00`).getTime();
+                if ( _ts >= startTs && _ts <= endTs) {
+                    if (!resultMap[startDate]) {
+                        resultMap[startDate] = {
+                            date: date,
+                            type: sportType,
+                            list: [],
                         }
-                        resultMap[startDate].list.push(rest);
-                        console.log(sportStartTime, sportTime, '/', detailType, startDate, _time)
                     }
+                    resultMap[startDate].list.push(rest);
+                    console.log(sportStartTime, sportTime, '/', detailType, startDate, _time)
                 }
             }
         }
     }
+
+    // for (let key in firstSheet) {
+    //     const keyLetter = key[0];
+    //     const keyNumber = key.slice(1);
+    //     /* 带!的属性（比如!ref）是表格的特殊属性，用来输出表格的信息，不是表格的内容，所以去掉 */
+    //
+    //     if (keyLetter === '!') continue;
+    //
+    //     // 判断是否是首列，同一行的数据均在首列处理
+    //     if (keyLetter === 'A' && keyNumber != 1) {
+    //         let [date, ...rest] = getValue(sheetList.map(item => item + '' + keyNumber), firstSheet);
+    //         const { year, month, day } = getDateTime(date);
+    //         date = `${year}-${month}-${day}`;
+    //         // 如果心率日期已经大于运动日期，则无需继续查找
+    //         if (new Date(`${date} 00:00:00`) > new Date(`${startDate} 00:00:00`)) {
+    //             break;
+    //         }
+    //
+    //         if (date === startDate) {
+    //             if (detailType === 'activityStage') {
+    //                 const [_startTime, _stopTime] = rest;
+    //                 const _startTs = new Date(`${date} ${_startTime}:00`).getTime();
+    //                 const _stopTs = new Date(`${date} ${_stopTime}:00`).getTime();
+    //                 // 当前stage的开始时间大于等于运动开始时间（或仅稍微小MINUTE_OFFSET）+
+    //                 // 当前stage的结束时间小于等于运动结束时间（或仅稍微大MINUTE_OFFSET）
+    //                 const [a1, a2, b1, b2] = startStopMatch(_startTs, _stopTs, startTs, endTs);
+    //                 if ((a1 || a2) && (b1 || b2)) {
+    //                     if (!resultMap[startDate]) {
+    //                         resultMap[startDate] = {
+    //                             date: date,
+    //                             type: sportType,
+    //                             list: [],
+    //                         }
+    //                     }
+    //                     resultMap[startDate].list.push(rest);
+    //                     console.log(sportStartTime, sportTime, '/', detailType, startDate, _startTime, _stopTime, a1, a2, b1, b2);
+    //                 }
+    //             } else {
+    //                 const [_time] = rest;
+    //                 const _ts = new Date(`${date} ${_time}:00`).getTime();
+    //                 if ( _ts >= startTs && _ts <= endTs) {
+    //                     if (!resultMap[startDate]) {
+    //                         resultMap[startDate] = {
+    //                             date: date,
+    //                             type: sportType,
+    //                             list: [],
+    //                         }
+    //                     }
+    //                     resultMap[startDate].list.push(rest);
+    //                     console.log(sportStartTime, sportTime, '/', detailType, startDate, _time)
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     return resultMap;
 }
 
@@ -309,20 +371,27 @@ async function generate(dirs, address, info) {
     const activityStageMap = {}
 
     function sportIterator(iterator) {
-        for (let key in sportFirstSheet) {
-            const keyLetter = key[0];
-            const keyNumber = key.slice(1);
-            /* 带!的属性（比如!ref）是表格的特殊属性，用来输出表格的信息，不是表格的内容，所以去掉 */
-
-            if (keyLetter === '!') continue;
-
-            // 判断是否是首列，同一行的数据均在首列处理
-            if (keyLetter === 'A' && keyNumber != 1) {
-                // 遍历sport
-                const sportInfo = getValue(sportSheetList.map(item => item + '' + keyNumber), sportFirstSheet);
-                iterator(sportInfo);
-            }
+        const refInfo = sportFirstSheet['!ref'];
+        const { startNum, endNum } = getRefInfo(refInfo);
+        for (let keyNumber = startNum + 1;keyNumber <= endNum; keyNumber++) {
+            // 遍历sport
+            const sportInfo = getValue(sportSheetList.map(item => item + '' + keyNumber), sportFirstSheet);
+            iterator(sportInfo);
         }
+        // for (let key in sportFirstSheet) {
+        //     const keyLetter = key[0];
+        //     const keyNumber = key.slice(1);
+        //     /* 带!的属性（比如!ref）是表格的特殊属性，用来输出表格的信息，不是表格的内容，所以去掉 */
+        //
+        //     if (keyLetter === '!') continue;
+        //
+        //     // 判断是否是首列，同一行的数据均在首列处理
+        //     if (keyLetter === 'A' && keyNumber != 1) {
+        //         // 遍历sport
+        //         const sportInfo = getValue(sportSheetList.map(item => item + '' + keyNumber), sportFirstSheet);
+        //         iterator(sportInfo);
+        //     }
+        // }
     }
     // 第二次迭代收集具体数据
     sportIterator((sportInfo) => {
@@ -340,7 +409,7 @@ async function generate(dirs, address, info) {
     generate(dirs, address, info);
 }
 async function parser(evt) {
-
+    console.time('parser');
     const { requestBody: { address, info = {} } = {} } = evt.data;
     dLog('Parsing -> ', info.filePath);
     const dirs = await preCheck(info.filePath);
@@ -348,7 +417,8 @@ async function parser(evt) {
         return; // 未找到
     }
 
-    generate(dirs, address, info);
+    await generate(dirs, address, info);
+    console.timeEnd('parser');
 
     return {
         list: [],
