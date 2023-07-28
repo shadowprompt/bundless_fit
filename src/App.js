@@ -106,7 +106,7 @@ function App() {
                     将官方的导出数据解压后，选择其中的特定数据文件（具体见待上传压缩包结构说明）打包至一个新的zip压缩包，上传至本工具即可开始转换。
                 </p>
                 <p>
-                    待转换成功后您会收到一封来自<b>justnotify@qq.com</b>的邮件，该邮件会含有一个转换结果压缩包的下载地址。
+                    待转换成功后您会收到一封来自<b>JustNotify@qq.com</b>的邮件，该邮件会含有一个转换结果压缩包的下载地址。
                 </p>
                 <p>
                     该压缩包内含有转换后的fit和tcx格式数据，每条运动记录对应一个文件。
@@ -142,13 +142,8 @@ function App() {
                         (fileList.length === 0 || !address) && (
                             <div>
                                 {
-                                    (fileList.length === 0) && (
-                                        <div style={{color: "red"}}>请选择zip包（需要符合指定的文件结构）</div>
-                                    )
-                                }
-                                {
                                     (!address) && (
-                                        <div style={{color: "red"}}>请填写邮箱地址，转换结果将发送至邮箱内</div>
+                                        <div style={{color: "red"}}>邮箱地址别忘了填写哦，转换结果需要通过邮箱发送</div>
                                     )
                                 }
                             </div>
