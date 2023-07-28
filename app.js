@@ -3,6 +3,7 @@ const path = require('path')
 const multer = require('multer');
 const fs = require("fs");
 const cors = require('cors');
+const { dLog } = require('@daozhao/utils');
 const {mkdirsSync} = require("./node/tools");
 
 mkdirsSync('/tmp/fit_upload_temp');
@@ -30,7 +31,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
     if(file.size === 0){
       //使用同步方式删除一个文件
       fs.unlinkSync(file.path);
-      console.log("successfully removed an empty file");
+      dLog("successfully removed an empty file");
     }else{
       const originalName = file.originalname;
       const list = originalName.split('.');
@@ -41,7 +42,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       const targetPath= `${baseFilePath}/${fileName}.${ext}`;
       //使用同步方式重命名一个文件
       fs.renameSync(file.path, targetPath);
-      console.log('successfully rename the file to ', file.path, targetPath, req.body.type);
+      dLog('successfully rename the file to ', file.path, targetPath, req.body.type);
       const handler = req.body.type === 'huawei' ? huaweiHandler : zeppHandler;
       return handler.preCheck(targetPath).then(result => {
         const baseUrl = `https://fit.bundless.cn/fit_upload/${fileName}`;
@@ -85,5 +86,5 @@ app.use(function(err, req, res, next) {
 })
 
 app.listen(9000, () => {
-  console.log(`Server start on http://localhost:9000`);
+  dLog(`Server start on http://localhost:9000`);
 })

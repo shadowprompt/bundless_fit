@@ -121,7 +121,7 @@ function collectDetailMap(sportInfo, workSheetInfo, resultMap, detailType) {
                         }
                     }
                     resultMap[startDate].list.push(rest);
-                    console.log(sportStartTime, sportTime, '/', detailType, startDate, _startTime, _stopTime, a1, a2, b1, b2);
+                    dLog(sportStartTime, sportTime, '/', detailType, startDate, _startTime, _stopTime, a1, a2, b1, b2);
                 }
             } else {
                 const [_time] = rest;
@@ -135,7 +135,7 @@ function collectDetailMap(sportInfo, workSheetInfo, resultMap, detailType) {
                         }
                     }
                     resultMap[startDate].list.push(rest);
-                    console.log(sportStartTime, sportTime, '/', detailType, startDate, _time)
+                    dLog(sportStartTime, sportTime, '/', detailType, startDate, _time)
                 }
             }
         }
@@ -213,7 +213,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         if (targetStepList[0]) {
             trackpoint.Cadence = parseInt(targetStepList[0][1] / 2);
         }
-        console.log(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
+        dLog(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
         return trackpoint;
     })
 
@@ -271,7 +271,7 @@ async function preCheck(filePath) {
     const dir = filePath.replace(/\.zip$/, '');
     try {
         await extract(filePath, { dir });
-        console.log('Extraction complete');
+        dLog('Extraction complete');
         return findBaseDir(dir);
     } catch (err) {
         // handle any errors

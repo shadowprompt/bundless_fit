@@ -165,7 +165,7 @@ function preCheck(filePath) {
             // 同名文件夹
             const dir = filePath.replace(/\.zip$/, '');
             await extract(filePath, { dir });
-            console.log('Extraction complete', filePath);
+            dLog('Extraction complete', filePath);
             resolve(findBaseDir(dir));
         } catch (err) {
             // handle any errors

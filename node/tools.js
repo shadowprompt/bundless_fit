@@ -3,6 +3,7 @@ const xml2js = require('xml2js');
 const converter = require('json-2-csv');
 const { exec } = require('child_process');
 const path = require("path");
+const { dLog } = require('@daozhao/utils');
 
 const gpsTransformer = require('./gpsTransformer');
 const {makeZip, sendMail} = require("./mail");
@@ -159,7 +160,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
     mkdirsSync(`${basePath}/tcx/${simplifyValue.sportType}`);
     fs.writeFileSync(`${basePath}/tcx/${simplifyValue.sportType}/${commonFileName}.tcx`, xml);
     fileCreatedCount = fileCreatedCount + 1
-    console.log('write tcx success', commonFileName, `${fileCreatedCount}/${totalLength}`);
+    dLog('write tcx success', commonFileName, `${fileCreatedCount}/${totalLength}`);
 }
 
 function makeFIT(basePath, jsonFileName, totalLength) {
@@ -298,18 +299,18 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         const jarPath = path.join(__dirname, './FitCSVTool.jar')
         const command = `${javaPath} -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
         // const command = `java -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
-        console.log('write csv success', commonFileName);
+        dLog('write csv success', commonFileName);
 
         return new Promise((resolve) => {
             exec(command, (error, stdout, stderr) => {
                 if (!error) {
                     // 成功
                     fileCreatedCount = fileCreatedCount + 1
-                    console.log('生成成功 fit ', commonFileName, `${fileCreatedCount}/${totalLength}`);
-                    console.log(stdout);
+                    dLog('生成成功 fit ', commonFileName, `${fileCreatedCount}/${totalLength}`);
+                    dLog(stdout);
                 } else {
                     // 失败
-                    console.log('生成失败 fit', command, fileCreatedCount, error);
+                    dLog('生成失败 fit', command, fileCreatedCount, error);
                 }
                 resolve(command);
             });
@@ -332,7 +333,7 @@ async function pack(baseDir, address, info) {
         const fitUrl = `${baseUrl}/fit.zip`;
         const tcxUrl = `${baseUrl}/tcx.zip`;
 
-        console.log('zip success', `${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
+        dLog('zip success', `${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
         sendMail('qq', {
             from: "justnotify@qq.com",
             to: address,
@@ -341,7 +342,7 @@ async function pack(baseDir, address, info) {
             html: `您提交的运动记录已经成功转换成fit和tcx格式，结果文件已经准备好了，fit格式结果下载地址<a href="${fitUrl}" target="_blank">${fitUrl}</a>，tcx格式结果下载地址<a href="${tcxUrl}" target="_blank">${tcxUrl}</a>`,
         });
     }).catch(err => {
-        console.log('zip error', err);
+        dLog('zip error', err);
     })
 }
 

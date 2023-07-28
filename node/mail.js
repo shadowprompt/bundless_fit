@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const { zip } = require('zip-a-folder');
 const extract = require('extract-zip')
+const { dLog } = require('@daozhao/utils');
 
 const typeMap= {
     sina: { // 失败 535
@@ -26,7 +27,7 @@ function sendMail(type, msg) {
     const config = typeMap[type] || typeMap['qq'];
     nodemailer.createTestAccount((err, account) => {
         // create reusable transporter object using the default SMTP transport
-        // console.log('account', account);
+        // dLog('account', account);
         let transporter = nodemailer.createTransport({
             ...config
         });
@@ -37,9 +38,9 @@ function sendMail(type, msg) {
         };
 
         transporter.sendMail(message).then(info=>{
-            console.log('Preview URL: ' + nodemailer.getTestMessageUrl(info));
+            dLog('Preview URL: ' + nodemailer.getTestMessageUrl(info));
         }).catch(err => {
-            console.log('send error', err);
+            dLog('send error', err);
         });
     });
 }
@@ -47,7 +48,7 @@ function sendMail(type, msg) {
 async function extractZip() {
     try {
         await extract('/Users/shadow/Desktop/aFit.zip', { dir: '/Users/shadow/Desktop/aFit' })
-        console.log('Extraction complete')
+        dLog('Extraction complete')
     } catch (err) {
         // handle any errors
     }
