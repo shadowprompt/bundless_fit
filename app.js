@@ -36,7 +36,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       const originalName = file.originalname;
       const list = originalName.split('.');
       const ext = list[list.length - 1];
-      const fileName = 'file_' + Date.now();
+      const fileName = 'fit_' + Date.now();
       const baseFilePath = `/tmp/fit_upload`;
       mkdirsSync(baseFilePath);
       const targetPath= `${baseFilePath}/${fileName}.${ext}`;
