@@ -20,6 +20,7 @@ const paths = require('./paths');
 const modules = require('./modules');
 const getClientEnvironment = require('./env');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
+const HtmlWebpackCountPlugin = require('./HtmlWebpackCountPlugin');
 const ForkTsCheckerWebpackPlugin =
   process.env.TSC_COMPILE_ON_ERROR === 'true'
     ? require('react-dev-utils/ForkTsCheckerWarningWebpackPlugin')
@@ -563,6 +564,12 @@ module.exports = function (webpackEnv) {
       ].filter(Boolean),
     },
     plugins: [
+      // 插入工具转换次数template
+      new HtmlWebpackCountPlugin(`<div style="text-align: center">
+        <p>本工具累计转换 <span style="font-weight: bold;color: #ff0000; font-size: 24px;"><%- count%> </span> 次</p>
+        <p><a href="https://beian.miit.gov.cn/" target="_blank" title="鄂ICP备2020023502号-2" rel="noreferrer">鄂ICP备2020023502号-2</a></p>
+        </div>`
+      ),
       // Generates an `index.html` file with the <script> injected.
       new HtmlWebpackPlugin(
         Object.assign(

@@ -145,10 +145,5 @@
       "jest-watch-typeahead/testname"
     ],
     "resetMocks": true
-  },
-  "babel": {
-    "presets": [
-      "react-app"
-    ]
   }
 }

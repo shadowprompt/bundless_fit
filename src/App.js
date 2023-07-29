@@ -206,7 +206,6 @@ function App() {
                     </List.Item>
                 )}
             />
-            <Divider plain={true}><a href="https://beian.miit.gov.cn/" target="_blank" title="鄂ICP备2020023502号-2" rel="noreferrer">鄂ICP备2020023502号-2</a></Divider>
         </div>
     );
 }
