@@ -278,13 +278,13 @@ async function preCheck(filePath) {
     }
 }
 
-async function generate(dirs, address, info) {
+async function generate(dirs, info) {
     const [baseDir, SPORT_FILE, HEARTRATE_AUTO_FILE, ACTIVITY_MINUTE_FILE, ACTIVITY_STAGE_FILE] = dirs;
 
     const isJsonDirExist = fs.existsSync(path.join(baseDir, 'json'));
 
     if (isJsonDirExist) {
-        await pack(baseDir, address, info);
+        await pack(baseDir, info);
         return
     }
 
@@ -377,18 +377,18 @@ async function generate(dirs, address, info) {
         collectData(sportInfo, baseDir, {heartRateMap, stepMap, activityStageMap});
     })
     // 数据已收集完毕再次执行generate
-    generate(dirs, address, info);
+    generate(dirs, info);
 }
 async function parser(evt) {
     console.time('parser');
-    const { requestBody: { address, info = {} } = {} } = evt.data;
+    const { requestBody: { info = {} } = {} } = evt.data;
     dLog('Parsing -> ', info.filePath);
     const dirs = await preCheck(info.filePath);
     if (!dirs) {
         return; // 未找到
     }
 
-    await generate(dirs, address, info);
+    await generate(dirs, info);
     console.timeEnd('parser');
 
     return {

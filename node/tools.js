@@ -3,7 +3,8 @@ const xml2js = require('xml2js');
 const converter = require('json-2-csv');
 const { exec } = require('child_process');
 const path = require("path");
-const { dLog } = require('@daozhao/utils');
+const { dLog, nodeStore } = require('@daozhao/utils');
+const localStorage = nodeStore('../localStorage/bundless_fit');
 
 const gpsTransformer = require('./gpsTransformer');
 const {makeZip, sendMail} = require("./mail");
@@ -160,7 +161,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
     mkdirsSync(`${basePath}/tcx/${simplifyValue.sportType}`);
     fs.writeFileSync(`${basePath}/tcx/${simplifyValue.sportType}/${commonFileName}.tcx`, xml);
     fileCreatedCount = fileCreatedCount + 1
-    dLog('write tcx success', commonFileName, `${fileCreatedCount}/${totalLength}`);
+    dLog('tcx success', commonFileName, `${fileCreatedCount}/${totalLength}`);
 }
 
 function makeFIT(basePath, jsonFileName, totalLength) {
@@ -299,18 +300,18 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         const jarPath = path.join(__dirname, './FitCSVTool.jar')
         const command = `${javaPath} -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
         // const command = `java -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
-        dLog('write csv success', commonFileName);
+        dLog('csv success', commonFileName);
 
         return new Promise((resolve) => {
             exec(command, (error, stdout, stderr) => {
-                if (!error) {
+                if (!error && !stderr) {
                     // 成功
                     fileCreatedCount = fileCreatedCount + 1
-                    dLog('生成成功 fit ', commonFileName, `${fileCreatedCount}/${totalLength}`);
-                    dLog(stdout);
+                    dLog('fit success', commonFileName, `${fileCreatedCount}/${totalLength}`);
                 } else {
                     // 失败
-                    dLog('生成失败 fit', command, fileCreatedCount, error);
+                    dLog('fit fail', command, fileCreatedCount, error);
+                    dLog(stderr);
                 }
                 resolve(command);
             });
@@ -320,8 +321,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
     });
 }
 
-async function pack(baseDir, address, info) {
-    const { baseUrl, baseFilePath, fileName } = info;
+async function pack(baseDir, info) {
+    const { address, type, baseUrl, baseFilePath, fileName } = info;
 
     mkdirsSync(path.join(baseDir, 'csv'));
     mkdirsSync(path.join(baseDir, 'fit'));
@@ -333,7 +334,29 @@ async function pack(baseDir, address, info) {
         const fitUrl = `${baseUrl}/fit.zip`;
         const tcxUrl = `${baseUrl}/tcx.zip`;
 
-        dLog('zip success', `${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
+        let prevList = localStorage.getItem('list') || '[]';
+        prevList = JSON.parse(prevList);
+        const target = prevList.find(item => item.fileName === fileName);
+        const ts = Date.now();
+        if (target) {
+            target.status = 'success';
+            target.ts = ts;
+            localStorage.setItem('list', JSON.stringify(prevList));
+        } else {
+            localStorage.setItem('list', JSON.stringify([
+                ...prevList,
+                {
+                    address,
+                    type,
+                    fileName,
+                    status: 'success',
+                    ts,
+                }
+            ]));
+        }
+
+
+        dLog('zip success', `[${address} ${type}] ${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
         sendMail('qq', {
             from: "justnotify@qq.com",
             to: address,

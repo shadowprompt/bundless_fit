@@ -176,14 +176,14 @@ function preCheck(filePath) {
 
 }
 
-async function generate(dirs, address, info) {
+async function generate(dirs, info) {
     const [baseDir, MOTION_FILE] = dirs;
 
     const jsonDirPath = path.join(baseDir, 'json');
     const isDirExist = fs.existsSync(jsonDirPath);
 
     if (isDirExist) {
-        await pack(baseDir, address, info);
+        await pack(baseDir, info);
         return;
     }
 
@@ -194,18 +194,18 @@ async function generate(dirs, address, info) {
         collectData(motion, baseDir);
     })
     // 数据已收集完毕再次执行generate
-    generate(dirs, address, info);
+    generate(dirs, info);
 }
 
 async function parser(evt) {
-    const { requestBody: { address, info = {} } = {} } = evt.data;
+    const { requestBody: { info = {} } = {} } = evt.data;
     dLog('Parsing -> ', info.filePath);
     const dirs = await preCheck(info.filePath);
     if (!dirs) {
         return; // 未找到
     }
 
-    generate(dirs, address, info);
+    generate(dirs, info);
 
     return {
         list: [],
