@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Input, message, Upload, Divider, Radio, List } from 'antd';
 
@@ -30,6 +30,13 @@ function App() {
         url: 'https://h5hosting.dbankcdn.com/cch5/healthkit/data-import/pages/oauth-callback.html#/',
         desc: '先从右上角登录后直接导入'
     }]);
+
+    useEffect(() => {
+        const countWrapper = document.querySelector('.countWrapper');
+        if (countWrapper) {
+            countWrapper.style.display = '';
+        }
+    }, [])
 
     const onAddressChange = (e) => {
         setAddress(e.target.value);

@@ -565,7 +565,7 @@ module.exports = function (webpackEnv) {
     },
     plugins: [
       // 插入工具转换次数template
-      new HtmlWebpackCountPlugin(`<div style="text-align: center">
+      new HtmlWebpackCountPlugin(`<div class="countWrapper" style="text-align: center;display: none;">
         <p>本工具累计转换 <span style="font-weight: bold;color: #ff0000; font-size: 24px;"><%- count%> </span> 次</p>
         <p><a href="https://beian.miit.gov.cn/" target="_blank" title="鄂ICP备2020023502号-2" rel="noreferrer">鄂ICP备2020023502号-2</a></p>
         </div>`
