@@ -247,12 +247,12 @@ function findBaseDir(filePath) {
     matchedList.push(fileList.find(item => /SPORT.+\.csv/i.test(item)));
     matchedList.push(fileList.find(item => /HEARTRATE_AUTO.+\.csv/i.test(item)));
     matchedList.push(fileList.find(item => /ACTIVITY_MINUTE.+\.csv/i.test(item)));
-    matchedList.push(fileList.find(item => /ACTIVITY_STAGE.+\.csv/i.test(item)));
+    // matchedList.push(fileList.find(item => /ACTIVITY_STAGE.+\.csv/i.test(item)));
     matchedList.unshift(filePath);
 
     matchedList = matchedList.filter(item => item); // 过滤掉空的
 
-    if (matchedList.length === 5) {
+    if (matchedList.length === 4) {
         return matchedList; // 当前目录即为目标目录
     }
 
@@ -307,7 +307,8 @@ async function generate(dirs, address, info) {
     function sportIterator(iterator) {
         const refInfo = sportFirstSheet['!ref'];
         const { startNum, endNum } = getRefInfo(refInfo);
-        for (let keyNumber = startNum;keyNumber <= endNum; keyNumber++) {
+        // sport数据默认是降序，改成升序使用
+        for (let keyNumber = endNum;keyNumber >= startNum; keyNumber--) {
             // 遍历sport
             const sportInfo = getValue(sportSheetList.map(item => item + '' + keyNumber), sportFirstSheet);
             iterator(sportInfo);
@@ -336,16 +337,16 @@ async function generate(dirs, address, info) {
         firstSheet: firstSheetActivityMinute,
     };
     // 阶段
-    const workbookActivityStage = XLSX.readFile(baseDir + '/' + ACTIVITY_STAGE_FILE, {cellDates: true, dateNF: "yyyy-mm-dd"});
-    const sheetNameActivityStage = workbookActivityStage.SheetNames[0];
-    const firstSheetActivityStage = workbookActivityStage.Sheets[sheetNameActivityStage];
-    const refInfoActivityStage = firstSheetActivityStage['!ref'];
-    const { startNum: startNumActivityStage, endNum: endNumActivityStage  } = getRefInfo(refInfoActivityStage);
-    const worksheetInfoActivityStage = {
-        startNum: startNumActivityStage,
-        endNum: endNumActivityStage,
-        firstSheet: firstSheetActivityStage,
-    };
+    // const workbookActivityStage = XLSX.readFile(baseDir + '/' + ACTIVITY_STAGE_FILE, {cellDates: true, dateNF: "yyyy-mm-dd"});
+    // const sheetNameActivityStage = workbookActivityStage.SheetNames[0];
+    // const firstSheetActivityStage = workbookActivityStage.Sheets[sheetNameActivityStage];
+    // const refInfoActivityStage = firstSheetActivityStage['!ref'];
+    // const { startNum: startNumActivityStage, endNum: endNumActivityStage  } = getRefInfo(refInfoActivityStage);
+    // const worksheetInfoActivityStage = {
+    //     startNum: startNumActivityStage,
+    //     endNum: endNumActivityStage,
+    //     firstSheet: firstSheetActivityStage,
+    // };
 
     // 第一次迭代收集具体数据
     sportIterator((sport) => {
@@ -368,7 +369,7 @@ async function generate(dirs, address, info) {
         // 收集各sport期间的具体信息（心率、步数等）
         collectDetailMap(sportInfo, worksheetInfoHeartRateAuto, heartRateMap, 'heartRate');
         collectDetailMap(sportInfo, worksheetInfoActivityMinute, stepMap, 'step');
-        collectDetailMap(sportInfo, worksheetInfoActivityStage, activityStageMap, 'activityStage');
+        // collectDetailMap(sportInfo, worksheetInfoActivityStage, activityStageMap, 'activityStage');
     })
     // 第二次迭代收集具体数据
     sportIterator((sportInfo) => {
