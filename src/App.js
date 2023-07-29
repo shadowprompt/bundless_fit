@@ -45,8 +45,7 @@ function App() {
         formData.append('type', type);
         formData.append('address', address);
         setUploading(true);
-        // const targetUrl = 'https://fit.bundless.cn/upload';
-        const targetUrl = '/upload';
+        const targetUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:9000/upload' : '/upload';
         fetch(targetUrl, {
             method: 'POST',
             body: formData,
@@ -54,10 +53,10 @@ function App() {
             .then((response) => response.json())
             .then((res) => {
                 if (res.success) {
-                    message.success('上传成功，转换结果随后将以邮件形式通知');
+                    message.success('上传成功，转换结果随后将以邮件形式通知', 5);
 
                 } else {
-                    message.error('上传文件格式不正确，请按照说明重新上传压缩包');
+                    message.error('上传压缩包结构不正确，请按照说明重新整理后上传', 5);
                 }
                 setFileList([]);
             })
@@ -99,7 +98,6 @@ function App() {
                     <p className="sub"><b>SPORT/SPOR_xxx.csv</b></p>
                     <p className="sub"><b>HEARTRATE_AUTO/HEARTRATE_AUTO_xxx.csv</b></p>
                     <p className="sub"><b>ACTIVITY_MINUTE/ACTIVITY_MINUTE_xxx.csv</b></p>
-                    <p className="sub"><b>ACTIVITY_STAGE_FILE/ACTIVITY_STAGE_FILE_xxx.csv</b></p>
                     <p>放至一个文件夹内，打包成zip压缩包上传</p>
                 </div>
             );
@@ -150,7 +148,7 @@ function App() {
                 <Divider orientation="left" plain>待上传压缩包结构说明</Divider>
                 <div className="upload-desc">
                     { typeRender(type) }
-                    <div className="upload-intro">更多说明可以参考</div>
+                    <div className="upload-intro">更多说明可以参考<a href="https://www.toutiao.com/article/7260290208145637929/" target="_blank" rel="noreferrer">华为、小米运动记录转fit和tcx格式工具转换效果展示及使用教程</a></div>
                 </div>
 
                 <Divider>3. 上传数据</Divider>
@@ -208,7 +206,7 @@ function App() {
                     </List.Item>
                 )}
             />
-            <Divider plain={true}><a href="https://beian.miit.gov.cn/" target="_blank" title="鄂ICP备2020023502号-2" rel="noreferrer" >鄂ICP备2020023502号-2</a></Divider>
+            <Divider plain={true}><a href="https://beian.miit.gov.cn/" target="_blank" title="鄂ICP备2020023502号-2" rel="noreferrer">鄂ICP备2020023502号-2</a></Divider>
         </div>
     );
 }
