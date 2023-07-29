@@ -118,7 +118,7 @@ function App() {
             </header>
             <div className="app-logo">
                 <div className="img-box">
-                    <img src="https://p3-sign.toutiaoimg.com/tos-cn-i-qvj2lq49k0/87619a6292d54235bea51825c3f3bb9d~tplv-obj:500:500.image?_iz=97245&from=post&x-expires=1697932800&x-signature=SxteyYanO5kWU08vdsV7MgzEhG8%3D"
+                    <img src="https://p3-sign.toutiaoimg.com/tos-cn-i-qvj2lq49k0/67965aa354f64273b46bcc3207f73dad~noop.image?_iz=58558&from=article.pc_detail&x-expires=1691219057&x-signature=CLh7KA4xI9E1wlzpxe4Rc%2F6TlkA%3D"
                          title="转换格式" alt=""/>
                 </div>
             </div>
@@ -189,10 +189,17 @@ function App() {
                     </Button>
                 </div>
             </section>
-            <Divider plain={true}>如果本工具对您有帮助，可以选择给我打赏哦</Divider>
+            <Divider plain={true}>每一笔打赏都是对我的肯定和鼓励，也是我继续研发下去的动力。</Divider>
             <div className="img-box">
                 <img className="zfb" src="/zfb.png"
                      title="转换格式" alt=""/>
+            </div>
+            <Divider>解压后文件夹命名规则说明</Divider>
+            <div className="app-logo">
+                <div className="img-box">
+                    <img src="https://p3-sign.toutiaoimg.com/tos-cn-i-qvj2lq49k0/6df294736ddc41c2b22fd88fb332db74~noop.image?_iz=58558&from=article.pc_detail&x-expires=1691219057&x-signature=WgiGy6p3BACU7pU9q2K0F7elJDs%3D"
+                         title="运动类型说明" alt=""/>
+                </div>
             </div>
             <Divider orientation="left">主流运动平台导入数据入口</Divider>
             <List
