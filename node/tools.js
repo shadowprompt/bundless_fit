@@ -286,19 +286,51 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         gen([['Data', 0, 'event'], ['timestamp', endTimeFit, 's'], ['event', 0], ['event_type', 4], ['event_group', 0]]), // 结束
     )
 
-    const paceMap = simplifyValue.paceMap;
-    if (paceMap) { // 有配速信息，可将每公里作为一圈
+    const paceMap = simplifyValue.paceMap || {};
+    if (Object.keys(paceMap).length > 0) { // 有配速信息，可将每公里作为一圈
         // start_time、timestamp 分别对应起始时间
         // total_timer_time和total_elapsed_time的值相同
+        // 步频
+        // 心率
         infoList.push(
-            gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1],  ['total_distance', 1]]),
+            gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1], ['total_distance', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1]]),
         )
         Object.keys(paceMap).reduce((acc, curr) => {
             const totalDistance = parseInt(curr / 10000);
             const elapsedTimeSeconds = paceMap[curr];
-            infoList.push(
-                gen([['Data', 0, 'lap'], ['start_time', startTimeFit + acc.totalElapsedTimeSeconds], ['timestamp', startTimeFit + acc.totalElapsedTimeSeconds + elapsedTimeSeconds, 's'], ['total_timer_time', elapsedTimeSeconds, 's'], ['total_elapsed_time', elapsedTimeSeconds, 's'], ['total_distance', totalDistance - acc.elapsedDistance]]),
-            )
+
+            const lapStartTimeTs =  startTimeTs + acc.totalElapsedTimeSeconds * 1000;
+            const lapEndTimeTs =  startTimeTs + (acc.totalElapsedTimeSeconds + elapsedTimeSeconds)* 1000;
+
+            const lapCadenceTrackList = trackList.filter(item => {
+                const ts = new Date(item.Time).getTime();
+                return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item.Cadence;
+            }).map(item => [1, item.Cadence * 1]);
+            const lapCadenceSummary = getSummaryFromList(lapCadenceTrackList);
+
+            const lapHeartRateTrackList = trackList.filter(item => {
+                const ts = new Date(item.Time).getTime();
+                return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item.HeartRateBpm && item.HeartRateBpm.Value;
+            }).map(item => [1, item.HeartRateBpm.Value * 1]);
+            const lapHeartRateSummary = getSummaryFromList(lapHeartRateTrackList);
+
+            // 一定有的
+            const list = [['Data', 0, 'lap'], ['start_time', startTimeFit + acc.totalElapsedTimeSeconds], ['timestamp', startTimeFit + acc.totalElapsedTimeSeconds + elapsedTimeSeconds, 's'], ['total_timer_time', elapsedTimeSeconds, 's'], ['total_elapsed_time', elapsedTimeSeconds, 's'], ['total_distance', totalDistance - acc.elapsedDistance]];
+            // 可能有的 步频信息
+            if (lapCadenceTrackList.length === 0) {
+                list.push(['max_cadence', '', 'rpm'], ['avg_cadence', '', 'rpm']);
+            } else {
+                list.push(['max_cadence', lapCadenceSummary.max, 'rpm'], ['avg_cadence', lapCadenceSummary.avg, 'rpm']);
+            }
+            // 可能有的 心率信息
+            if (lapHeartRateTrackList.length === 0) {
+                list.push(['max_heart_rate', '', 'bpm'], ['min_heart_rate', '', 'bpm'], ['avg_heart_rate', '', 'bpm']);
+            } else {
+                list.push(['max_heart_rate', lapHeartRateSummary.max, 'bpm'], ['min_heart_rate', lapHeartRateSummary.min, 'bpm'], ['avg_heart_rate', lapHeartRateSummary.avg, 'bpm']);
+            }
+
+            infoList.push(gen(list));
+
             return {
                 totalElapsedTimeSeconds: elapsedTimeSeconds + acc.totalElapsedTimeSeconds,
                 elapsedDistance: totalDistance,
