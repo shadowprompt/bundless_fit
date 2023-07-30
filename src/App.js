@@ -32,7 +32,7 @@ function App() {
     }]);
     const [updateLogList] = useState([{
         label: '2023-07-30',
-        desc: '显示每公里距离、心率、配速'
+        desc: '显示每公里距离、心率、配速（仅限华为）'
     }, {
         label: '2023-07-29',
         type: 'desc',
