@@ -292,8 +292,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         // total_timer_time和total_elapsed_time的值相同
         // 步频
         // 心率
+        // 配速
         infoList.push(
-            gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1], ['total_distance', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1]]),
+            gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1], ['total_distance', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1], ['max_speed', 1], ['avg_speed', 1]]),
         )
         Object.keys(paceMap).reduce((acc, curr) => {
             const totalDistance = parseInt(curr / 10000);
@@ -314,6 +315,12 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             }).map(item => [1, item.HeartRateBpm.Value * 1]);
             const lapHeartRateSummary = getSummaryFromList(lapHeartRateTrackList);
 
+            const lapSpeedTrackList = trackList.filter(item => {
+                const ts = new Date(item.Time).getTime();
+                return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item.speed;
+            }).map(item => [1, item.speed / 10]);
+            const lapSpeedSummary = getSummaryFromList(lapSpeedTrackList);
+
             // 一定有的
             const list = [['Data', 0, 'lap'], ['start_time', startTimeFit + acc.totalElapsedTimeSeconds], ['timestamp', startTimeFit + acc.totalElapsedTimeSeconds + elapsedTimeSeconds, 's'], ['total_timer_time', elapsedTimeSeconds, 's'], ['total_elapsed_time', elapsedTimeSeconds, 's'], ['total_distance', totalDistance - acc.elapsedDistance]];
             // 可能有的 步频信息
@@ -327,6 +334,13 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                 list.push(['max_heart_rate', '', 'bpm'], ['min_heart_rate', '', 'bpm'], ['avg_heart_rate', '', 'bpm']);
             } else {
                 list.push(['max_heart_rate', lapHeartRateSummary.max, 'bpm'], ['min_heart_rate', lapHeartRateSummary.min, 'bpm'], ['avg_heart_rate', lapHeartRateSummary.avg, 'bpm']);
+            }
+            // TODO
+            // 可能有的 配速信息
+            if (lapSpeedTrackList.length === 0) {
+                list.push(['max_speed', '', 'm/s'], ['avg_speed', '', 'm/s']);
+            } else {
+                list.push(['max_speed', lapSpeedSummary.max.toFixed(3), 'm/s'], ['avg_speed', lapSpeedSummary.avg.toFixed(3), 'm/s']);
             }
 
             infoList.push(gen(list));
