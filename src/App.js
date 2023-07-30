@@ -30,6 +30,18 @@ function App() {
         url: 'https://h5hosting.dbankcdn.com/cch5/healthkit/data-import/pages/oauth-callback.html#/',
         desc: '先从右上角登录后直接导入'
     }]);
+    const [updateLogList] = useState([{
+        label: '2023-07-30',
+        desc: '显示每公里距离、心率、配速'
+    }, {
+        label: '2023-07-29',
+        type: 'desc',
+        desc: '显示各主要运动平台导入数据入口、本工具转换次数'
+    }, {
+        label: '2023-07-28',
+        desc: '修正华为数据轨迹漂移问题'
+    }]);
+
 
     useEffect(() => {
         const countWrapper = document.querySelector('.countWrapper');
@@ -216,6 +228,20 @@ function App() {
                                 </span>
                             )}
                             description={item.desc}
+                        />
+                    </List.Item>
+                )}
+            />
+            <Divider orientation="left">更新日志</Divider>
+            <List
+                size="small"
+                bordered
+                dataSource={updateLogList}
+                renderItem={(item) => (
+                    <List.Item>
+                        <List.Item.Meta
+                            title={<span>{item.label}</span>}
+                            description={ item.type ? (item.desc) : (<span className='important_text'>{item.desc}</span>)}
                         />
                     </List.Item>
                 )}
