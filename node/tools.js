@@ -284,8 +284,37 @@ function makeFIT(basePath, jsonFileName, totalLength) {
     infoList.push(
         gen([['Definition', 0, 'event'], ['timestamp', 1], ['event', 1], ['event_type', 1], ['event_group', 1]]),
         gen([['Data', 0, 'event'], ['timestamp', endTimeFit, 's'], ['event', 0], ['event_type', 4], ['event_group', 0]]), // 结束
-        gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1], ['total_timer_time', 1], ['total_distance', 1], ['total_calories', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1]]),
-        gen([['Data', 0, 'lap'], ['start_time', startTimeFit], ['timestamp', endTimeFit, 's'], ['total_timer_time', totalTimeSeconds, 's'], ['total_elapsed_time', totalTimeSeconds, 's'], ['total_timer_time', totalTimeSeconds, 's'], ['total_distance', simplifyValue.totalDistance, 'm'], ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'], ['max_cadence', cadenceSummary.max, 'rpm'], ['avg_cadence', cadenceSummary.avg, 'rpm'], ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'], ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'], ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm']]),
+    )
+
+    const paceMap = simplifyValue.paceMap;
+    if (paceMap) { // 有配速信息，可将每公里作为一圈
+        // start_time、timestamp 分别对应起始时间
+        // total_timer_time和total_elapsed_time的值相同
+        infoList.push(
+            gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1],  ['total_distance', 1]]),
+        )
+        Object.keys(paceMap).reduce((acc, curr) => {
+            const totalDistance = parseInt(curr / 10000);
+            const elapsedTimeSeconds = paceMap[curr];
+            infoList.push(
+                gen([['Data', 0, 'lap'], ['start_time', startTimeFit + acc.totalElapsedTimeSeconds], ['timestamp', startTimeFit + acc.totalElapsedTimeSeconds + elapsedTimeSeconds, 's'], ['total_timer_time', elapsedTimeSeconds, 's'], ['total_elapsed_time', elapsedTimeSeconds, 's'], ['total_distance', totalDistance - acc.elapsedDistance]]),
+            )
+            return {
+                totalElapsedTimeSeconds: elapsedTimeSeconds + acc.totalElapsedTimeSeconds,
+                elapsedDistance: totalDistance,
+            }
+        }, {
+            totalElapsedTimeSeconds: 0,
+            elapsedDistance: 0,
+        })
+    } else { // 无配速信息则全程数据作为一圈
+        infoList.push(
+            gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1], ['total_distance', 1], ['total_calories', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1]]),
+            gen([['Data', 0, 'lap'], ['start_time', startTimeFit], ['timestamp', endTimeFit, 's'], ['total_timer_time', totalTimeSeconds, 's'], ['total_elapsed_time', totalTimeSeconds, 's'], ['total_distance', simplifyValue.totalDistance, 'm'], ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'], ['max_cadence', cadenceSummary.max, 'rpm'], ['avg_cadence', cadenceSummary.avg, 'rpm'], ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'], ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'], ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm']])
+        )
+    }
+
+    infoList.push(
         gen([['Definition', 0, 'session'], ['start_time', 1], ['timestamp', 1], ['sport', 1], ['total_elapsed_time', 1], ['total_timer_time', 1], ['total_distance', 1], ['total_calories', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1] ]),
         gen([['Data', 0, 'session'], ['start_time', startTimeFit], ['timestamp', endTimeFit, 's'], ['sport', 1], ['total_elapsed_time', totalTimeSeconds, 's'], ['total_timer_time', totalTimeSeconds, 's'], ['total_distance', simplifyValue.totalDistance, 'm'], ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'], ['max_cadence', cadenceSummary.max, 'rpm'], ['avg_cadence', cadenceSummary.avg, 'rpm'], ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'], ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'], ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'] ]),
     )
