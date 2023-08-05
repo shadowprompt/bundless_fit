@@ -97,12 +97,12 @@ function collectData(motion, baseDir) {
                 trackList.push(targetTrack);
             }
             if (data.tp === 'lbs' && data.lat && data.lon > 0 ) {
-                // 实测发现华为批量导出的经纬度不准，需要修正 维度 + 0.002075，经度 - 0.004345
                 targetTrack.Position = {
                     LatitudeDegrees: data.lat, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
                     LongitudeDegrees: data.lon,
                     positionType: 'gcj02', // 增加一个type标记当前坐标系，方便后续转换
                 }
+                targetTrack.AltitudeMeters = data.alt;
             } else if(data.tp === 'h-r') {
                 targetTrack.HeartRateBpm = {
                     $: {

@@ -223,11 +223,19 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                 ['position_long', parseInt(LongitudeDegrees * ( Math.pow(2, 31) / 180 )), 'semicircles'],
             )
         }
+        // 海拔
+        if (item.AltitudeMeters) {
+            eachList.push(
+                ['altitude', (item.AltitudeMeters * 1).toFixed(3), 'm']
+            )
+        }
+        // 心率
         if (item.HeartRateBpm) {
             eachList.push(
                 ['heart_rate', item.HeartRateBpm.Value * 1, 'bpm']
             )
         }
+        // 步频
         if (item.Cadence) {
             eachList.push(
                 ['cadence', item.Cadence, 'rpm']
