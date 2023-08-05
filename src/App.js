@@ -33,7 +33,7 @@ function App() {
     const [updateLogList] = useState([{
         label: '2023-08-05',
         type: 'desc',
-        desc: '.fit格式转换结果显示配速信息，显示每公里步幅（仅限华为）'
+        desc: '.fit格式转换结果显示配速、海波信息，显示每公里步幅（仅限华为）'
     }, {
         label: '2023-07-31',
         type: 'desc',
