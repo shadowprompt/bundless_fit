@@ -31,8 +31,12 @@ function App() {
         desc: '先从右上角登录后直接导入'
     }]);
     const [updateLogList] = useState([{
+        label: '2023-07-31',
+        type: 'desc',
+        desc: '页面兼容老版本浏览器'
+    }, {
         label: '2023-07-30',
-        desc: '显示每公里距离、心率、配速（仅限华为）'
+        desc: '.fit格式转换结果显示每公里距离、心率、配速（仅限华为）'
     }, {
         label: '2023-07-29',
         type: 'desc',
@@ -201,7 +205,7 @@ function App() {
                     </Button>
                 </div>
             </section>
-            <Divider plain={true}>每一笔打赏都是对我的肯定和鼓励，也是我继续研发下去的动力。</Divider>
+            <Divider plain={true}>每一笔打赏都是对我的肯定和鼓励。</Divider>
             <div className="img-box">
                 <img className="zfb" src="/zfb.png"
                      title="转换格式" alt=""/>
