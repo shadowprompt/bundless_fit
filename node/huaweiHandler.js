@@ -35,7 +35,7 @@ function getDateTime(s) {
     }
 }
 
-function calcDateFlag(data) {
+function calcDateFlag(data, startTs) {
     let dateT;
     if (data.tp === 'lbs') {
         // 可能包含E，也可能直接是时间戳
@@ -46,12 +46,16 @@ function calcDateFlag(data) {
         } else {
             dateT = data.t;
         }
-    } else {
+    } else if (data.tp === 'rs') {
+        // data.k为从startTs开始运动的秒数
+        dateT = startTs + (data.k * 1000);
+    } else { // h-r s-r
         dateT = data.k.slice(0,10) + '000';
     }
+    const date = new Date(dateT * 1);
     return {
-        ts: dateT * 1,
-        isoTime: new Date(dateT * 1).toISOString()
+        ts: date.getTime(),
+        isoTime: date.toISOString(),
     };
 }
 
@@ -70,9 +74,8 @@ function collectData(motion, baseDir) {
     const simplifyValue = JSON.parse(simplifyValueStr);
 
     const trackList = [];
-    let lastCadenceTs = 0;
+    let startTimeTs = 0;
 
-    let lastTrack;
     detailValueList.forEach(item => {
         const [tp, ...rest] = item.split(';').filter(item => !/\s+/.test(item));
         const data = rest.map(item => item.split('=')).reduce((acc, [key, value]) => ({
@@ -80,8 +83,12 @@ function collectData(motion, baseDir) {
             [key]: value
         }), {tp});
         //
-        if (['lbs', 'h-r', 's-r'].includes(data.tp)) {
-            const { ts, isoTime } = calcDateFlag(data);
+        if (['lbs', 'h-r', 's-r', 'rs'].includes(data.tp)) {
+            const { ts, isoTime } = calcDateFlag(data, startTimeTs);
+            // 将记录的第一个时间戳作为startTimeTs
+            if (startTimeTs === 0) {
+                startTimeTs = ts;
+            }
             let targetTrack = trackList.find(item => item.Time === isoTime);
             if (!targetTrack) {
                 targetTrack = {
@@ -105,18 +112,14 @@ function collectData(motion, baseDir) {
                 }
             } else if(data.tp === 's-r') { // 使用rpm单位时，需要换算：除以2
                 targetTrack.Cadence = parseInt(data.v / 2);
-                lastCadenceTs = ts;
+            } else if(data.tp === 'rs') { // 配速
+                targetTrack.speed = data.v; // 非TCX标准属性
             }
-            lastTrack = targetTrack;
-        } else if (data.tp === 'rs') { // 实时速度 因为其没有时间信息，就近挂载至上一个track记录上
-            lastTrack.speed = data.v; // 非TCX标准属性
         }
     })
 
     trackList.sort((a, b) => new Date(a.Time) - new Date(b.Time));
 
-    const firstTrack = trackList[0] || {};
-    const startTimeTs = new Date(firstTrack.Time).getTime();
     const {year, month, day, hours, minutes, seconds} = getDateTime(startTimeTs);
     const localTime = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
 
