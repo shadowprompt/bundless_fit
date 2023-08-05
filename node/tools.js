@@ -184,6 +184,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
     const heartRateSummary = getSummaryFromList(heartRateList);
     const cadenceList = trackList.filter(item => item.Cadence).map(item => [1, item.Cadence]);
     const cadenceSummary = getSummaryFromList(cadenceList);
+    // 根据距离、步频、时间推算出步幅
+    const stepLengthAvg = parseInt(simplifyValue.totalDistance / ((cadenceSummary.avg*2/60) * totalTimeSeconds) * 1000);
     // 兜底generic
     const activeType = sportTypeFitActivityTypeMap[simplifyValue.sportType] || 0;
 
@@ -234,7 +236,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 
         if (item.speed) {
             eachList.push(
-                ['speed', item.speed/10, 'm/s']
+                ['speed', (item.speed/10).toFixed(3), 'm/s']
             )
         }
         return {
@@ -294,7 +296,22 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         // 心率
         // 配速
         infoList.push(
-            gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1], ['total_distance', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1], ['max_speed', 1], ['avg_speed', 1]]),
+            gen([
+                ['Definition', 0, 'lap'],
+                ['start_time', 1],
+                ['timestamp', 1],
+                ['total_timer_time', 1],
+                ['total_elapsed_time', 1],
+                ['total_distance', 1],
+                ['max_cadence', 1],
+                ['avg_cadence', 1],
+                ['avg_step_length', 1],
+                ['max_heart_rate', 1],
+                ['min_heart_rate', 1],
+                ['avg_heart_rate', 1],
+                ['max_speed', 1],
+                ['avg_speed', 1],
+            ]),
         )
         Object.keys(paceMap).reduce((acc, curr) => {
             const totalDistance = parseInt(curr / 10000);
@@ -322,25 +339,56 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             const lapSpeedSummary = getSummaryFromList(lapSpeedTrackList);
 
             // 一定有的
-            const list = [['Data', 0, 'lap'], ['start_time', startTimeFit + acc.totalElapsedTimeSeconds], ['timestamp', startTimeFit + acc.totalElapsedTimeSeconds + elapsedTimeSeconds, 's'], ['total_timer_time', elapsedTimeSeconds, 's'], ['total_elapsed_time', elapsedTimeSeconds, 's'], ['total_distance', totalDistance - acc.elapsedDistance]];
+            const lapTotalDistance = totalDistance - acc.elapsedDistance;
+            const list = [
+                ['Data', 0, 'lap'],
+                ['start_time', startTimeFit + acc.totalElapsedTimeSeconds],
+                ['timestamp', startTimeFit + acc.totalElapsedTimeSeconds + elapsedTimeSeconds, 's'],
+                ['total_timer_time', elapsedTimeSeconds, 's'],
+                ['total_elapsed_time', elapsedTimeSeconds, 's'],
+                ['total_distance', lapTotalDistance],
+            ];
             // 可能有的 步频信息
+            // 根据距离、步频、时间推算出步幅
             if (lapCadenceTrackList.length === 0) {
-                list.push(['max_cadence', '', 'rpm'], ['avg_cadence', '', 'rpm']);
+                list.push(
+                    ['max_cadence', '', 'rpm'],
+                    ['avg_cadence', '', 'rpm'],
+                    ['avg_step_length', '', 'mm'],
+                );
             } else {
-                list.push(['max_cadence', lapCadenceSummary.max, 'rpm'], ['avg_cadence', lapCadenceSummary.avg, 'rpm']);
+                const stepLengthAvg = parseInt(lapTotalDistance / ((lapCadenceSummary.avg * 2/60) * elapsedTimeSeconds) * 1000);
+                list.push(
+                    ['max_cadence', lapCadenceSummary.max, 'rpm'],
+                    ['avg_cadence', lapCadenceSummary.avg, 'rpm'],
+                    ['avg_step_length', stepLengthAvg, 'mm'],
+                );
             }
             // 可能有的 心率信息
             if (lapHeartRateTrackList.length === 0) {
-                list.push(['max_heart_rate', '', 'bpm'], ['min_heart_rate', '', 'bpm'], ['avg_heart_rate', '', 'bpm']);
+                list.push(
+                    ['max_heart_rate', '', 'bpm'],
+                    ['min_heart_rate', '', 'bpm'],
+                    ['avg_heart_rate', '', 'bpm'],
+                );
             } else {
-                list.push(['max_heart_rate', lapHeartRateSummary.max, 'bpm'], ['min_heart_rate', lapHeartRateSummary.min, 'bpm'], ['avg_heart_rate', lapHeartRateSummary.avg, 'bpm']);
+                list.push(
+                    ['max_heart_rate', lapHeartRateSummary.max, 'bpm'],
+                    ['min_heart_rate', lapHeartRateSummary.min, 'bpm'],
+                    ['avg_heart_rate', lapHeartRateSummary.avg, 'bpm'],
+                );
             }
-            // TODO
             // 可能有的 配速信息
             if (lapSpeedTrackList.length === 0) {
-                list.push(['max_speed', '', 'm/s'], ['avg_speed', '', 'm/s']);
+                list.push(
+                    ['max_speed', '', 'm/s'],
+                    ['avg_speed', '', 'm/s'],
+                );
             } else {
-                list.push(['max_speed', lapSpeedSummary.max.toFixed(3), 'm/s'], ['avg_speed', lapSpeedSummary.avg.toFixed(3), 'm/s']);
+                list.push(
+                    ['max_speed', (lapSpeedSummary.max * 1).toFixed(3), 'm/s'],
+                    ['avg_speed', (lapSpeedSummary.avg * 1).toFixed(3), 'm/s'],
+                );
             }
 
             infoList.push(gen(list));
@@ -355,14 +403,72 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         })
     } else { // 无配速信息则全程数据作为一圈
         infoList.push(
-            gen([['Definition', 0, 'lap'], ['start_time', 1], ['timestamp', 1], ['total_timer_time', 1], ['total_elapsed_time', 1], ['total_distance', 1], ['total_calories', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1]]),
-            gen([['Data', 0, 'lap'], ['start_time', startTimeFit], ['timestamp', endTimeFit, 's'], ['total_timer_time', totalTimeSeconds, 's'], ['total_elapsed_time', totalTimeSeconds, 's'], ['total_distance', simplifyValue.totalDistance, 'm'], ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'], ['max_cadence', cadenceSummary.max, 'rpm'], ['avg_cadence', cadenceSummary.avg, 'rpm'], ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'], ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'], ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm']])
+            gen([
+                ['Definition', 0, 'lap'],
+                ['start_time', 1],
+                ['timestamp', 1],
+                ['total_timer_time', 1],
+                ['total_elapsed_time', 1],
+                ['total_distance', 1],
+                ['total_calories', 1],
+                ['max_cadence', 1],
+                ['avg_cadence', 1],
+                ['avg_step_length', 1],
+                ['max_heart_rate', 1],
+                ['min_heart_rate', 1],
+                ['avg_heart_rate', 1],
+            ]),
+            gen([
+                ['Data', 0, 'lap'],
+                ['start_time', startTimeFit],
+                ['timestamp', endTimeFit, 's'],
+                ['total_timer_time', totalTimeSeconds, 's'],
+                ['total_elapsed_time', totalTimeSeconds, 's'],
+                ['total_distance', simplifyValue.totalDistance, 'm'],
+                ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'],
+                ['max_cadence', cadenceSummary.max, 'rpm'],
+                ['avg_cadence', cadenceSummary.avg, 'rpm'],
+                ['avg_step_length', stepLengthAvg, 'mm'],
+                ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'],
+                ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'],
+                ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'],
+            ])
         )
     }
 
     infoList.push(
-        gen([['Definition', 0, 'session'], ['start_time', 1], ['timestamp', 1], ['sport', 1], ['total_elapsed_time', 1], ['total_timer_time', 1], ['total_distance', 1], ['total_calories', 1], ['max_cadence', 1], ['avg_cadence', 1], ['max_heart_rate', 1], ['min_heart_rate', 1], ['avg_heart_rate', 1] ]),
-        gen([['Data', 0, 'session'], ['start_time', startTimeFit], ['timestamp', endTimeFit, 's'], ['sport', 1], ['total_elapsed_time', totalTimeSeconds, 's'], ['total_timer_time', totalTimeSeconds, 's'], ['total_distance', simplifyValue.totalDistance, 'm'], ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'], ['max_cadence', cadenceSummary.max, 'rpm'], ['avg_cadence', cadenceSummary.avg, 'rpm'], ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'], ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'], ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'] ]),
+        gen([
+            ['Definition', 0, 'session'],
+            ['start_time', 1],
+            ['timestamp', 1],
+            ['sport', 1],
+            ['total_elapsed_time', 1],
+            ['total_timer_time', 1],
+            ['total_distance', 1],
+            ['total_calories', 1],
+            ['max_cadence', 1],
+            ['avg_cadence', 1],
+            ['avg_step_length', 1],
+            ['max_heart_rate', 1],
+            ['min_heart_rate', 1],
+            ['avg_heart_rate', 1],
+        ]),
+        gen([
+            ['Data', 0, 'session'],
+            ['start_time', startTimeFit],
+            ['timestamp', endTimeFit, 's'],
+            ['sport', 1],
+            ['total_elapsed_time', totalTimeSeconds, 's'],
+            ['total_timer_time', totalTimeSeconds, 's'],
+            ['total_distance', simplifyValue.totalDistance, 'm'],
+            ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'],
+            ['max_cadence', cadenceSummary.max, 'rpm'],
+            ['avg_cadence', cadenceSummary.avg, 'rpm'],
+            ['avg_step_length', stepLengthAvg, 'mm'],
+            ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'],
+            ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'],
+            ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'],
+        ]),
     )
 
     converter.json2csv(infoList, ((err, result) => {
