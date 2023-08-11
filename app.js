@@ -35,8 +35,9 @@ app.get(`/`, (req, res) => {
 
 
 app.post('/upload', upload.array('zip_file', 1), function(req,res){
-  const address = req.body.address;
-  const type = req.body.type;
+  const requestBody =  req.body || {};
+  const address = requestBody.address;
+  const type = requestBody.type;
   const ts = Date.now();
   const fileName = 'fit_' + ts;
 
