@@ -32,8 +32,7 @@ function App() {
     }]);
     const [updateLogList] = useState([{
         label: '2023-08-05',
-        type: 'desc',
-        desc: '.fit格式转换结果显示配速、海波信息，显示每公里步幅（仅限华为）'
+        desc: '.fit格式转换结果显示配速、海拔信息，显示每公里步幅（仅限华为）'
     }, {
         label: '2023-07-31',
         type: 'desc',
@@ -138,7 +137,7 @@ function App() {
             </header>
             <div className="app-logo">
                 <div className="img-box">
-                    <img src="https://p3-sign.toutiaoimg.com/tos-cn-i-qvj2lq49k0/67965aa354f64273b46bcc3207f73dad~noop.image?_iz=58558&from=article.pc_detail&x-expires=1691219057&x-signature=CLh7KA4xI9E1wlzpxe4Rc%2F6TlkA%3D"
+                    <img src="/tool-intro.jpeg"
                          title="转换格式" alt=""/>
                 </div>
             </div>
@@ -217,7 +216,7 @@ function App() {
             <Divider>解压后文件夹命名规则说明</Divider>
             <div className="app-logo">
                 <div className="img-box">
-                    <img src="https://p3-sign.toutiaoimg.com/tos-cn-i-qvj2lq49k0/6df294736ddc41c2b22fd88fb332db74~noop.image?_iz=58558&from=article.pc_detail&x-expires=1691219057&x-signature=WgiGy6p3BACU7pU9q2K0F7elJDs%3D"
+                    <img src="/type-intro.png"
                          title="运动类型说明" alt=""/>
                 </div>
             </div>
