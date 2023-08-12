@@ -99,9 +99,13 @@ function makeTCX(basePath, jsonFileName, totalLength) {
         'TrainingCenterDatabase': {
             $: {
                 'xsi:schemaLocation': "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd",
-                version: "1.0",
-                xmlns: "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2",
+                'xmlns:ns5': "http://www.garmin.com/xmlschemas/ActivityGoals/v1",
+                'xmlns:ns3': "http://www.garmin.com/xmlschemas/ActivityExtension/v2",
+                'xmlns:ns2': "http://www.garmin.com/xmlschemas/UserProfile/v2",
+                'xmlns': "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2",
                 'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
+                'xmlns:ns4': "http://www.garmin.com/xmlschemas/ProfileExtension/v1",
+                'xmlns:xsd': "http://www.w3.org/2001/XMLSchema"
             },
             Activities: {
                 Activity: {
@@ -242,9 +246,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             )
         }
 
-        if (item.speed) {
+        if (item._speed) {
             eachList.push(
-                ['speed', (item.speed/10).toFixed(3), 'm/s']
+                ['speed', (item._speed/10).toFixed(3), 'm/s']
             )
         }
         return {
@@ -342,8 +346,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 
             const lapSpeedTrackList = trackList.filter(item => {
                 const ts = new Date(item.Time).getTime();
-                return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item.speed;
-            }).map(item => [1, item.speed / 10]);
+                return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item._speed;
+            }).map(item => [1, item._speed / 10]);
             const lapSpeedSummary = getSummaryFromList(lapSpeedTrackList);
 
             // 一定有的

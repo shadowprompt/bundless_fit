@@ -113,7 +113,13 @@ function collectData(motion, baseDir) {
             } else if(data.tp === 's-r') { // 使用rpm单位时，需要换算：除以2
                 targetTrack.Cadence = parseInt(data.v / 2);
             } else if(data.tp === 'rs') { // 配速
-                targetTrack.speed = data.v; // 非TCX标准属性
+                targetTrack.Extensions = {
+                    'ns3:TPX': {
+                        'ns3:Speed': data.v,
+                        // 'ns3:Watts': 20,
+                    }
+                }
+                targetTrack._speed = data.v; // 非TCX标准属性，仅为了取值方便
             }
         }
     })
