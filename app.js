@@ -40,6 +40,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
   const type = requestBody.type;
   const ts = Date.now();
   const fileName = 'fit_' + ts;
+  dLog('log upload ', fileName, `[${address} ${type}]` );
 
   let prevList = localStorage.getItem('list') || '[]';
   prevList = JSON.parse(prevList);
@@ -69,7 +70,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       const targetPath= `${baseFilePath}/${fileName}.${ext}`;
       //使用同步方式重命名一个文件
       fs.renameSync(file.path, targetPath);
-      dLog('successfully rename the file to ', file.path, targetPath, type);
+      dLog('log rename success ', file.path, targetPath, `[${address} ${type}]` );
       const handler = type === 'huawei' ? huaweiHandler : zeppHandler;
       return handler.preCheck(targetPath).then(result => {
         const baseUrl = `https://fit.bundless.cn/fit_upload/${fileName}`;

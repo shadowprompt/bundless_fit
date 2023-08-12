@@ -545,7 +545,7 @@ async function pack(baseDir, info) {
         }
 
 
-        dLog('zip success', `[${address} ${type}] ${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
+        dLog('log zip success', `[${address} ${type}] ${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
         sendMail('qq', {
             from: "justnotify@qq.com",
             to: address,
