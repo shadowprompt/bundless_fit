@@ -30,7 +30,11 @@ function App() {
         url: 'https://h5hosting.dbankcdn.com/cch5/healthkit/data-import/pages/oauth-callback.html#/',
         desc: '先从右上角登录后直接导入'
     }]);
-    const [updateLogList] = useState([{
+    const [updateLogList] = useState([ {
+        label: '2023-08-18',
+        type: 'desc',
+        desc: '启用域名 https://convert.fit'
+    }, {
         label: '2023-08-12',
         desc: '.tcx格式转换结果新增显示配速、海拔信息（仅限华为）'
     }, {
@@ -144,7 +148,7 @@ function App() {
             </header>
             <div className="app-logo">
                 <div className="img-box">
-                    <img src="/tool-intro.jpeg"
+                    <img src="/tool-intro.png"
                          title="转换格式" alt=""/>
                 </div>
             </div>
@@ -154,6 +158,9 @@ function App() {
                 </p>
                 <p>
                     本工具旨在为各位跑友转换运动记录数据，支持将<b>华为运动健康</b>、<b>Zepp Life（原小米运动）</b>官方导出的运动数据转换成业内通用的fit（推荐）或tcx格式，然后即可顺利导入主流的运动平台，比如高驰、佳明、RQrun、Strava等。
+                </p>
+                <p className="slogan">
+                    我们只能转换运动健康数据，并不能生产健康，为了健康，运动起来吧。
                 </p>
                 <p>
                     将官方的导出数据解压后，选择其中的特定数据文件（具体见待上传压缩包结构说明）打包至一个新的zip压缩包，上传至本工具即可开始转换。
