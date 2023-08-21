@@ -82,7 +82,7 @@ function App() {
             ? 'http://localhost:9000/upload'
             : window.location.search.includes('source=')
                 ? '/upload'
-                : 'https://fit.bundless.cn/upload';
+                : 'https://convert.fit/upload';
         fetch(targetUrl, {
             method: 'POST',
             body: formData,
@@ -222,7 +222,7 @@ function App() {
                     </Button>
                 </div>
             </section>
-            <Divider plain={true}>每一笔打赏都是对我的肯定和鼓励。</Divider>
+            <Divider plain={true}>如果本工具解决了您的难题，可以给我加🍗哦。</Divider>
             <div className="img-box">
                 <img className="zfb" src="/zfb.png"
                      title="转换格式" alt=""/>
