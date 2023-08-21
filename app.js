@@ -73,7 +73,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       dLog('log rename success ', file.path, targetPath, `[${address} ${type}]` );
       const handler = type === 'huawei' ? huaweiHandler : zeppHandler;
       return handler.preCheck(targetPath).then(result => {
-        const baseUrl = `https://fit.bundless.cn/fit_upload/${fileName}`;
+        const baseUrl = `https://convert.fit/fit_upload/${fileName}`;
 
         Promise.resolve().then(() => {
           handler.parser({

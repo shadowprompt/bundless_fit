@@ -24,7 +24,7 @@ inputs:
     timeout: 60
     environment: release
     customDomains:
-      - domain: fit.bundless.cn
+      - domain: convert.fit
         certId: 7EPobIA2
         protocols:
           - https

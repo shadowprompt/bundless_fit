@@ -78,7 +78,7 @@ function App() {
         formData.append('type', type);
         formData.append('address', address);
         setUploading(true);
-        const targetUrl = process.env.NODE_ENV === 'development'
+        const targetUrl = window.location.href.includes('localhost')
             ? 'http://localhost:9000/upload'
             : window.location.search.includes('source=')
                 ? '/upload'
