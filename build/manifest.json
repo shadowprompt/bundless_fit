@@ -4,18 +4,33 @@
   "icons": [
     {
       "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "sizes": "192x192 144x144 96x96 72x72 48x48",
       "type": "image/x-icon"
     },
     {
-      "src": "logo144.png",
+      "src": "res/drawable-mdpi/ic_shortcut_fit.png",
+      "type": "image/png",
+      "sizes": "48x48"
+    },
+    {
+      "src": "res/drawable-hdpi/ic_shortcut_fit.png",
+      "type": "image/png",
+      "sizes": "72x72"
+    },
+    {
+      "src": "res/drawable-xhdpi/ic_shortcut_fit.png",
+      "type": "image/png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "res/drawable-xxhdpi/ic_shortcut_fit.png",
       "type": "image/png",
       "sizes": "144x144"
     },
     {
-      "src": "logo512.png",
+      "src": "res/drawable-xxxhdpi/ic_shortcut_fit.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "192x192"
     }
   ],
   "start_url": ".",
