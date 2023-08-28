@@ -91,7 +91,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
             }
           })
         })
-
+        dLog('log preCheck ', result ? 'success': 'fail', file.path, targetPath, `[${address} ${type}]` );
         res.send({
           success: !!result,
         });
