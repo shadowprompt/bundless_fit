@@ -21,12 +21,13 @@ app.use(express.static('/tmp'));
 app.get('/', (req, res) => {
   let prevList = localStorage.getItem('list') || '[]';
   prevList = JSON.parse(prevList);
+  const successList = prevList.filter(item => item.status === 'success');
   const data = {
     count:  prevList.length + 50,
+    successCount: successList.length + 50,
   };
   res.render('index.html', data);
 });
-app.use(express.static(path.join(__dirname, '../bundless_fit/build'))); // 直接读取bundless_fit web打包后的文件夹
 app.use(express.static(path.join(__dirname, './build'))); // 直接读取bundless_fit web打包后的文件夹
 // Routes
 app.get(`/`, (req, res) => {
