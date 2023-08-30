@@ -78,11 +78,11 @@ function App() {
         formData.append('type', type);
         formData.append('address', address);
         setUploading(true);
-        const targetUrl = process.env.NODE_ENV === 'development'
+        const targetUrl = window.location.href.includes('localhost')
             ? 'http://localhost:9000/upload'
             : window.location.search.includes('source=')
                 ? '/upload'
-                : 'https://fit.bundless.cn/upload';
+                : 'https://convert.fit/upload';
         fetch(targetUrl, {
             method: 'POST',
             body: formData,
@@ -116,7 +116,7 @@ function App() {
         setFileList([...fileList, file]);
         return false;
     };
-    
+
     const typeRender = (type) => {
         if (type === 'huawei') {
             return (
@@ -125,6 +125,9 @@ function App() {
                     <p>将该文件夹中的以下文件</p>
                     <p className="sub"><b>Motion path detail data & description/motion path detail data.json</b></p>
                     <p>放至一个文件夹内，打包成zip压缩包上传</p>
+                    <p className="img-box">
+                      <img src='/zip-intro-huawei.png' alt='华为压缩包结构说明' />
+                    </p>
                 </div>
             );
         } else if (type === 'zepp') {
@@ -136,6 +139,9 @@ function App() {
                     <p className="sub"><b>HEARTRATE_AUTO/HEARTRATE_AUTO_xxx.csv</b></p>
                     <p className="sub"><b>ACTIVITY_MINUTE/ACTIVITY_MINUTE_xxx.csv</b></p>
                     <p>放至一个文件夹内，打包成zip压缩包上传</p>
+                    <p className="img-box">
+                      <img src='/zip-intro-zepp.png' alt='zepp压缩包结构说明' />
+                    </p>
                 </div>
             );
         }
@@ -222,7 +228,7 @@ function App() {
                     </Button>
                 </div>
             </section>
-            <Divider plain={true}>每一笔打赏都是对我的肯定和鼓励。</Divider>
+            <Divider plain={true}>如果本工具解决了您的难题，可以给我加🍗哦。</Divider>
             <div className="img-box">
                 <img className="zfb" src="/zfb.png"
                      title="转换格式" alt=""/>
