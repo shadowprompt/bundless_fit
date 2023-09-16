@@ -237,6 +237,11 @@ function App() {
                 <img className="zfb" src="/zfb.png"
                      title="转换格式" alt=""/>
             </div>
+            <div className="toutiao-box">
+              <div className="toutiao-des">欢迎来<span className="highlight">今日头条</span>关注支持我</div>
+              <img className="zfb" src="/qrcode.png"
+                   title="锅巴瓜子 今日头条" alt=""/>
+            </div>
             <Divider>解压后文件夹命名规则说明</Divider>
             <div className="app-logo">
                 <div className="img-box">

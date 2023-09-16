@@ -43,6 +43,21 @@
   .zfb {
     max-width: 300px;
   }
+  .toutiao-box {
+    max-width: 300px;
+    box-sizing: border-box;
+    margin: 8px auto;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid #fa3f43;
+    .toutiao-des {
+      margin-bottom: 16px;
+    }
+    .highlight {
+      color: #fa3f43;
+      font-weight: bold;
+    }
+  }
   .important_text {
     font-weight: bold;
   }
