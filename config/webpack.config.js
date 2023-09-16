@@ -420,7 +420,7 @@ module.exports = function (webpackEnv) {
                     },
                   ],
                 ],
-                
+
                 plugins: [
                   isEnvDevelopment &&
                     shouldUseReactRefresh &&
@@ -454,7 +454,7 @@ module.exports = function (webpackEnv) {
                 cacheDirectory: true,
                 // See #6846 for context on why cacheCompression is disabled
                 cacheCompression: false,
-                
+
                 // Babel sourcemaps are needed for debugging into node_modules
                 // code.  Without the options below, debuggers like VSCode
                 // show incorrect code and set breakpoints on the wrong lines.
@@ -568,6 +568,7 @@ module.exports = function (webpackEnv) {
       new HtmlWebpackCountPlugin(`<div class="countWrapper" style="text-align: center;display: none;">
         <p>本工具累计转换 <span style="font-weight: bold;color: #ff0000; font-size: 24px;"><%- count%> </span> 次</p>
         <p><a href="https://beian.miit.gov.cn/" target="_blank" title="鄂ICP备2020023502号" rel="noreferrer">鄂ICP备2020023502号</a></p>
+        <span style="display: none"><%- successCount%></span>
         </div>`
       ),
       // Generates an `index.html` file with the <script> injected.
