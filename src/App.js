@@ -30,10 +30,14 @@ function App() {
         url: 'https://h5hosting.dbankcdn.com/cch5/healthkit/data-import/pages/oauth-callback.html#/',
         desc: '先从右上角登录后直接导入'
     }]);
-    const [updateLogList] = useState([ {
-        label: '2023-08-18',
+    const [updateLogList] = useState([{
+        label: '2023-09-16',
         type: 'desc',
-        desc: '启用域名 https://convert.fit'
+        desc: '上调支持的压缩包大小上限；优化转化逻辑，提高生成fit文件成功率'
+    }, {
+      label: '2023-08-18',
+      type: 'desc',
+      desc: '启用域名 https://convert.fit'
     }, {
         label: '2023-08-12',
         desc: '.tcx格式转换结果新增显示配速、海拔信息（仅限华为）'
@@ -116,7 +120,7 @@ function App() {
         setFileList([...fileList, file]);
         return false;
     };
-    
+
     const typeRender = (type) => {
         if (type === 'huawei') {
             return (
