@@ -24,18 +24,23 @@ const sportTypeTcxMap = {
     // 274: 'RowMachine', // 划船机
     // 290: 'Rower', // 划船机划水模式
     // 291: 'Rowerstrength', // 划船机力量模式
-    279: 'MultiSport', // 其它运动 不好归类的都在此类
+    279: 'MultiSport', // 综合运动 不好归类的都在此类
     // 281: 'Walking', // 室内步行
     // 283: 'RopeSkipping', // 跳绳
     // 129: 'Badminton', // 羽毛球
 };
 
-const sportTypeFitActivityTypeMap = {
-    258: 1, // 跑步
-    264: 1,
-    259: 2, // 骑自行车
-    265: 2,
-    // 其它 0
+const sportTypeFitMap = {
+    258: [1, 0], // 户外跑步
+    264: [1, 1], // 室内跑步机
+    259: [2, 0], // 户外骑自行车
+    265: [2, 6], // 室内骑自行车
+    129: [0, 0], // 羽毛球 -> 通用
+    257: [11, 0], // 步行
+    281: [11, 0], // 室内步行
+    283: [10, 26], // 跳绳->有氧训练
+    279: [18, 0], // 综合运动
+    // 综合运动 [18, 0]
 };
 // 不转换坐标，仅以类似格式返回
 function justReturnPosition(LongitudeDegrees, LatitudeDegrees) {
@@ -215,7 +220,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         // 根据距离、步频、时间推算出步幅
         const stepLengthAvg = parseInt(simplifyValue.totalDistance / ((cadenceSummary.avg*2/60) * totalTimeSeconds) * 1000);
         // 兜底generic
-        const activeType = sportTypeFitActivityTypeMap[simplifyValue.sportType] || 0;
+        const [sportType, subSportType] = sportTypeFitMap[simplifyValue.sportType] || [18, 0];
 
 
         const fieldList = ['Field', 'Value', 'Units'];
@@ -304,7 +309,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             if (index === 0) {
                 infoList.push(
                   gen([['Definition', 0, 'record'], ['timestamp', 1], ['distance', 1], ['activity_type', 1]]),
-                  gen([['Data', 0, 'record'], ['timestamp', timeFit, 's'], ['distance', 0, 'm'], ['activity_type', activeType]]),
+                  gen([['Data', 0, 'record'], ['timestamp', timeFit, 's'], ['distance', 0, 'm'], ['activity_type', sportType]]),
                 )
             }
 
@@ -478,6 +483,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['start_time', 1],
               ['timestamp', 1],
               ['sport', 1],
+              ['sub_sport', 1],
               ['total_elapsed_time', 1],
               ['total_timer_time', 1],
               ['total_distance', 1],
@@ -493,7 +499,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['Data', 0, 'session'],
               ['start_time', startTimeFit],
               ['timestamp', endTimeFit, 's'],
-              ['sport', 1],
+              ['sport', sportType],
+              ['sub_sport', subSportType],
               ['total_elapsed_time', totalTimeSeconds, 's'],
               ['total_timer_time', totalTimeSeconds, 's'],
               ['total_distance', simplifyValue.totalDistance, 'm'],
