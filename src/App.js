@@ -31,9 +31,13 @@ function App() {
         desc: '先从右上角登录后直接导入'
     }]);
     const [updateLogList] = useState([{
-        label: '2023-09-16',
+        label: '2023-09-22',
         type: 'desc',
-        desc: '上调支持的压缩包大小上限；优化转化逻辑，提高生成fit文件成功率'
+        desc: '转换结果细分运动类型：支持户外跑步、跑步机跑步（新增）、步行（新增）、户外自行车（新增）'
+    }, {
+    label: '2023-09-16',
+      type: 'desc',
+      desc: '上调支持的压缩包大小上限；优化转化逻辑，提高生成fit文件成功率'
     }, {
       label: '2023-08-18',
       type: 'desc',
