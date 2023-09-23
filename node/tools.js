@@ -62,7 +62,7 @@ function getSummaryFromList(list) {
     const max =  list.reduce((acc, [, value]) => Math.max(acc, value), 0);
     const min =  list.reduce((acc, [, value]) => Math.min(acc, value), Infinity);
     const total =  list.reduce((acc, [, value]) => acc + value * 1, 0);
-    const avg = list.length > 0 ? parseInt(total / list.length) : 0;
+    const avg = list.length > 0 ? (total / list.length).toFixed(3) : 0;
     return {
         min,
         max,
@@ -212,13 +212,20 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         const startTimeFit = parseInt((startTimeTs - FIT_EPOCH_MS) / 1000);
         const totalTimeSeconds = parseInt(simplifyValue.totalTime/ 1000);
         const endTimeFit = parseInt((startTimeTs + simplifyValue.totalTime - FIT_EPOCH_MS) / 1000);
-
-        const heartRateList = trackList.filter(item => item.HeartRateBpm).map(item => [1, item.HeartRateBpm]);
-        const heartRateSummary = getSummaryFromList(heartRateList);
+        // 步频
         const cadenceList = trackList.filter(item => item.Cadence).map(item => [1, item.Cadence]);
         const cadenceSummary = getSummaryFromList(cadenceList);
         // 根据距离、步频、时间推算出步幅
         const stepLengthAvg = parseInt(simplifyValue.totalDistance / ((cadenceSummary.avg*2/60) * totalTimeSeconds) * 1000);
+        // 心率 simplifyValue自带可直接使用
+        const heartRateList = trackList.filter(item => item.HeartRateBpm).map(item => [1, item.HeartRateBpm]);
+        const heartRateSummary = getSummaryFromList(heartRateList);
+        // 配速
+        const speedList = trackList.filter(item => item._speed).map(item => [1, item._speed / 10]);
+        const speedSummary = getSummaryFromList(speedList);
+        // 高度
+        const altitudeList = trackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
+        const altitudeSummary = getSummaryFromList(altitudeList);
         // 兜底generic
         const [sportType, subSportType] = sportTypeFitMap[simplifyValue.sportType] || [18, 0];
 
@@ -352,6 +359,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['avg_heart_rate', 1],
                   ['max_speed', 1],
                   ['avg_speed', 1],
+                  ['max_altitude', 1],
+                  ['min_altitude', 1],
+                  ['avg_altitude', 1],
               ]),
             )
             Object.keys(paceMap).reduce((acc, curr) => {
@@ -378,6 +388,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                     return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item._speed;
                 }).map(item => [1, item._speed / 10]);
                 const lapSpeedSummary = getSummaryFromList(lapSpeedTrackList);
+
+                const lapAltitudeTrackList = trackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
+                const lapAltitudeSummary = getSummaryFromList(lapAltitudeTrackList);
 
                 // 一定有的
                 const lapTotalDistance = totalDistance - acc.elapsedDistance;
@@ -429,6 +442,20 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                     list.push(
                       ['max_speed', (lapSpeedSummary.max * 1).toFixed(3), 'm/s'],
                       ['avg_speed', (lapSpeedSummary.avg * 1).toFixed(3), 'm/s'],
+                    );
+                }
+                // 可能有的 高度信息
+                if (lapAltitudeTrackList.length === 0) {
+                    list.push(
+                      ['max_altitude', '', 'm'],
+                      ['min_altitude', '', 'm'],
+                      ['avg_altitude', '', 'm'],
+                    );
+                } else {
+                    list.push(
+                      ['max_altitude', (lapAltitudeSummary.max * 1).toFixed(3), 'm'],
+                      ['min_altitude', (lapAltitudeSummary.avg * 1).toFixed(3), 'm'],
+                      ['avg_altitude', (lapAltitudeSummary.avg * 1).toFixed(3), 'm'],
                     );
                 }
 
@@ -494,6 +521,11 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['max_heart_rate', 1],
               ['min_heart_rate', 1],
               ['avg_heart_rate', 1],
+              ['max_speed', 1],
+              ['avg_speed', 1],
+              ['max_altitude', 1],
+              ['min_altitude', 1],
+              ['avg_altitude', 1],
           ]),
           gen([
               ['Data', 0, 'session'],
@@ -511,6 +543,11 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'],
               ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'],
               ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'],
+              ['max_speed', speedSummary.max, 'm/s'],
+              ['avg_speed', speedSummary.avg, 'm/s'],
+              ['max_altitude', altitudeSummary.max, 'm'],
+              ['min_altitude', altitudeSummary.min, 'm'],
+              ['avg_altitude', altitudeSummary.avg, 'm'],
           ]),
         )
 
@@ -599,6 +636,7 @@ function pack(baseDir, info) {
 
 module.exports = {
     makeTCX,
+    makeFIT,
     runDirs,
     mkdirsSync,
     pack
