@@ -223,6 +223,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         // 配速
         const speedList = trackList.filter(item => item._speed).map(item => [1, item._speed / 10]);
         const speedSummary = getSummaryFromList(speedList);
+        speedSummary.avg = (simplifyValue.totalDistance/totalTimeSeconds).toFixed(3);
         // 高度
         const altitudeList = trackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
         const altitudeSummary = getSummaryFromList(altitudeList);
@@ -337,7 +338,24 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         )
 
         const paceMap = simplifyValue.paceMap || {};
-        if (Object.keys(paceMap).length > 0) { // 有配速信息，可将每公里作为一圈
+        // 计圈信息
+        const lapList = [];
+        Object.keys(paceMap).sort((a, b) => a - b).reduce(([lastPointIndex, lastDistance], item) => {
+            const kmNum = (item/10000000).toFixed(2) * 10000000;
+            const pointIndex = item - kmNum;
+            const distance = item - pointIndex;
+            const lapDistance = (distance - lastDistance)/10000;
+
+            const lapTrackList = trackList.filter(item => item._pointIndex >= lastPointIndex && item._pointIndex < pointIndex);
+            if (lapTrackList.length > 0) {
+                lapList.push([lapTrackList, lapDistance]);
+            }
+            return [pointIndex, distance];
+        }, [0, 0]);
+
+        let sessionEndTimeFit = endTimeFit; // session的timestamp值可能要根据计圈信息修改（因为高驰。。。）
+
+        if (lapList.length > 0) { // 有配速信息，可将每公里作为一圈
             // start_time、timestamp 分别对应起始时间
             // total_timer_time和total_elapsed_time的值相同
             // 步频
@@ -346,8 +364,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             infoList.push(
               gen([
                   ['Definition', 0, 'lap'],
-                  ['start_time', 1],
                   ['timestamp', 1],
+                  ['start_time', 1],
                   ['total_timer_time', 1],
                   ['total_elapsed_time', 1],
                   ['total_distance', 1],
@@ -364,40 +382,37 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['avg_altitude', 1],
               ]),
             )
-            Object.keys(paceMap).reduce((acc, curr) => {
-                const totalDistance = parseInt(curr / 10000);
-                const elapsedTimeSeconds = paceMap[curr];
+            lapList.forEach(([lapTrackList, lapTotalDistance], idx) => {
+                const startTrack = lapTrackList[0];
+                const endTrack = lapTrackList[lapTrackList.length - 1];
 
-                const lapStartTimeTs =  startTimeTs + acc.totalElapsedTimeSeconds * 1000;
-                const lapEndTimeTs =  startTimeTs + (acc.totalElapsedTimeSeconds + elapsedTimeSeconds)* 1000;
+                const lapStartTimeTs = new Date(startTrack.Time).getTime();
+                const lapEndTimeTs = new Date(endTrack.Time).getTime();
+                const lapStartTimeFit =  parseInt((lapStartTimeTs - FIT_EPOCH_MS) / 1000);
+                const lapEndTimeFit = parseInt((lapEndTimeTs - FIT_EPOCH_MS) / 1000);
+                const elapsedTimeSeconds = lapEndTimeFit - lapStartTimeFit;
+                // 根据最后一个计圈信息更新session的timestamp
+                if (idx === lapList.length - 1) {
+                    sessionEndTimeFit = lapEndTimeFit;
+                }
 
-                const lapCadenceTrackList = trackList.filter(item => {
-                    const ts = new Date(item.Time).getTime();
-                    return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item.Cadence;
-                }).map(item => [1, item.Cadence * 1]);
+                const lapCadenceTrackList = lapTrackList.filter(item => item.Cadence).map(item => [1, item.Cadence * 1]);
                 const lapCadenceSummary = getSummaryFromList(lapCadenceTrackList);
 
-                const lapHeartRateTrackList = trackList.filter(item => {
-                    const ts = new Date(item.Time).getTime();
-                    return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item.HeartRateBpm && item.HeartRateBpm.Value;
-                }).map(item => [1, item.HeartRateBpm.Value * 1]);
+                const lapHeartRateTrackList = lapTrackList.filter(item => item.HeartRateBpm && item.HeartRateBpm.Value).map(item => [1, item.HeartRateBpm.Value * 1]);
                 const lapHeartRateSummary = getSummaryFromList(lapHeartRateTrackList);
 
-                const lapSpeedTrackList = trackList.filter(item => {
-                    const ts = new Date(item.Time).getTime();
-                    return ts >= lapStartTimeTs && ts<= lapEndTimeTs && item._speed;
-                }).map(item => [1, item._speed / 10]);
+                const lapSpeedTrackList = lapTrackList.filter(item => item._speed).map(item => [1, item._speed / 10]);
                 const lapSpeedSummary = getSummaryFromList(lapSpeedTrackList);
+                lapSpeedSummary.avg = (lapTotalDistance/elapsedTimeSeconds).toFixed(3); // 平均配速应该根据距离除以时间，而不是求各个速度的平均值
 
-                const lapAltitudeTrackList = trackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
+                const lapAltitudeTrackList = lapTrackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
                 const lapAltitudeSummary = getSummaryFromList(lapAltitudeTrackList);
 
-                // 一定有的
-                const lapTotalDistance = totalDistance - acc.elapsedDistance;
                 const list = [
                     ['Data', 0, 'lap'],
-                    ['start_time', startTimeFit + acc.totalElapsedTimeSeconds],
-                    ['timestamp', startTimeFit + acc.totalElapsedTimeSeconds + elapsedTimeSeconds, 's'],
+                    ['timestamp', lapEndTimeFit, 's'],
+                    ['start_time', lapStartTimeFit],
                     ['total_timer_time', elapsedTimeSeconds, 's'],
                     ['total_elapsed_time', elapsedTimeSeconds, 's'],
                     ['total_distance', lapTotalDistance],
@@ -460,21 +475,13 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                 }
 
                 infoList.push(gen(list));
-
-                return {
-                    totalElapsedTimeSeconds: elapsedTimeSeconds + acc.totalElapsedTimeSeconds,
-                    elapsedDistance: totalDistance,
-                }
-            }, {
-                totalElapsedTimeSeconds: 0,
-                elapsedDistance: 0,
             })
         } else { // 无配速信息则全程数据作为一圈
             infoList.push(
               gen([
                   ['Definition', 0, 'lap'],
-                  ['start_time', 1],
                   ['timestamp', 1],
+                  ['start_time', 1],
                   ['total_timer_time', 1],
                   ['total_elapsed_time', 1],
                   ['total_distance', 1],
@@ -488,8 +495,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ]),
               gen([
                   ['Data', 0, 'lap'],
-                  ['start_time', startTimeFit],
                   ['timestamp', endTimeFit, 's'],
+                  ['start_time', startTimeFit],
                   ['total_timer_time', totalTimeSeconds, 's'],
                   ['total_elapsed_time', totalTimeSeconds, 's'],
                   ['total_distance', simplifyValue.totalDistance, 'm'],
@@ -507,8 +514,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         infoList.push(
           gen([
               ['Definition', 0, 'session'],
-              ['start_time', 1],
               ['timestamp', 1],
+              ['start_time', 1],
               ['sport', 1],
               ['sub_sport', 1],
               ['total_elapsed_time', 1],
@@ -529,8 +536,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
           ]),
           gen([
               ['Data', 0, 'session'],
+              ['timestamp', sessionEndTimeFit, 's'],
               ['start_time', startTimeFit],
-              ['timestamp', endTimeFit, 's'],
               ['sport', sportType],
               ['sub_sport', subSportType],
               ['total_elapsed_time', totalTimeSeconds, 's'],
