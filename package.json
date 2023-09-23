@@ -73,6 +73,7 @@
   },
   "scripts": {
     "dev": "NODE_ENV=development node app.js",
+    "debug": "NODE_ENV=development node node/debug.js",
     "start": "NODE_ENV=development node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js"
