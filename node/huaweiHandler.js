@@ -103,6 +103,7 @@ function collectData(motion, baseDir) {
                     positionType: 'gcj02', // 增加一个type标记当前坐标系，方便后续转换
                 }
                 targetTrack.AltitudeMeters = data.alt;
+                targetTrack._pointIndex = data.k; // 轨迹点数
             } else if(data.tp === 'h-r') {
                 targetTrack.HeartRateBpm = {
                     $: {
