@@ -353,8 +353,6 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             return [pointIndex, distance];
         }, [0, 0]);
 
-        let sessionEndTimeFit = endTimeFit; // session的timestamp值可能要根据计圈信息修改（因为高驰。。。）
-
         if (lapList.length > 0) { // 有配速信息，可将每公里作为一圈
             // start_time、timestamp 分别对应起始时间
             // total_timer_time和total_elapsed_time的值相同
@@ -391,10 +389,6 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                 const lapStartTimeFit =  parseInt((lapStartTimeTs - FIT_EPOCH_MS) / 1000);
                 const lapEndTimeFit = parseInt((lapEndTimeTs - FIT_EPOCH_MS) / 1000);
                 const elapsedTimeSeconds = lapEndTimeFit - lapStartTimeFit;
-                // 根据最后一个计圈信息更新session的timestamp
-                if (idx === lapList.length - 1) {
-                    sessionEndTimeFit = lapEndTimeFit;
-                }
 
                 const lapCadenceTrackList = lapTrackList.filter(item => item.Cadence).map(item => [1, item.Cadence * 1]);
                 const lapCadenceSummary = getSummaryFromList(lapCadenceTrackList);
@@ -536,7 +530,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
           ]),
           gen([
               ['Data', 0, 'session'],
-              ['timestamp', sessionEndTimeFit, 's'],
+              ['timestamp', endTimeFit, 's'],
               ['start_time', startTimeFit],
               ['sport', sportType],
               ['sub_sport', subSportType],
