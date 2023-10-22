@@ -31,6 +31,10 @@ function App() {
         desc: '先从右上角登录后直接导入'
     }]);
     const [updateLogList] = useState([{
+      label: '2023-10-22',
+      type: 'desc',
+      desc: '原服务器即将3个月到期，迁移至同事的共享服务器，并限制同时只能有1个转换任务'
+    }, {
         label: '2023-09-22',
         type: 'desc',
         desc: '转换结果细分运动类型：支持户外跑步、跑步机跑步（新增）、步行（新增）、户外自行车（新增）'
@@ -86,6 +90,7 @@ function App() {
         formData.append('type', type);
         formData.append('address', address);
         setUploading(true);
+        // 指定本地开发和本服务器开发
         const targetUrl = window.location.href.includes('localhost')
             ? 'http://localhost:9000/upload'
             : window.location.search.includes('source=')
@@ -97,11 +102,13 @@ function App() {
         })
             .then((response) => response.json())
             .then((res) => {
-                if (res.success) {
+                if (res.code === 1) {
                     message.success('上传成功，转换结果随后将以邮件形式通知', 5);
 
-                } else {
+                } else if (res.code === 0) {
                     message.error('上传压缩包结构不正确，请按照说明重新整理后上传', 5);
+                } else {
+                  message.error('当前任务繁忙，请稍后再试', 5);
                 }
                 setFileList([]);
             })
