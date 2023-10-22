@@ -42,6 +42,22 @@ const sportTypeFitMap = {
     279: [18, 0], // 综合运动
     // 综合运动 [18, 0]
 };
+// 任务锁
+const LOCK_FILE_PATH = path.join(__dirname, './job.lock');
+
+function releaseLock() {
+    if (checkLock()) {
+        fs.rmSync(LOCK_FILE_PATH);
+    }
+}
+
+function setLock(str = '1') {
+    fs.writeFileSync(LOCK_FILE_PATH, str);
+}
+
+function checkLock() {
+    return fs.existsSync(LOCK_FILE_PATH)
+}
 // 不转换坐标，仅以类似格式返回
 function justReturnPosition(LongitudeDegrees, LatitudeDegrees) {
     return [LongitudeDegrees, LatitudeDegrees];
@@ -589,7 +605,10 @@ function pack(baseDir, info) {
 
     mkdirsSync(path.join(baseDir, 'csv'));
     mkdirsSync(path.join(baseDir, 'fit'));
-    runDirs(baseDir, packFiles);
+    runDirs(baseDir, () => {
+        packFiles();
+        releaseLock();
+    });
 
     function packFiles() {
         Promise.all([
@@ -636,6 +655,9 @@ function pack(baseDir, info) {
 }
 
 module.exports = {
+    setLock,
+    releaseLock,
+    checkLock,
     makeTCX,
     makeFIT,
     runDirs,

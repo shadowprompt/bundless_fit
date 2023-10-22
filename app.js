@@ -5,7 +5,7 @@ const fs = require("fs");
 const cors = require('cors');
 const ejs = require('ejs');
 const { dLog, nodeStore } = require('@daozhao/utils');
-const {mkdirsSync} = require("./node/tools");
+const {mkdirsSync, checkLock, releaseLock, setLock} = require("./node/tools");
 
 mkdirsSync('/tmp/fit_upload_temp');
 const upload = multer({ dest: '/tmp/fit_upload_temp/' });
@@ -34,7 +34,7 @@ app.get(`/`, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'))
 })
 
-
+releaseLock();
 app.post('/upload', upload.array('zip_file', 1), function(req,res){
   const requestBody =  req.body || {};
   const address = requestBody.address;
@@ -42,6 +42,15 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
   const ts = Date.now();
   const fileName = 'fit_' + ts;
   dLog('log upload ', fileName, `[${address} ${type}]` );
+  // code -1:有任务正在执行 1:预检通过 0:预检不通过
+  if (checkLock()) {
+    res.send({
+      code: -1,
+    });
+    return;
+  } else {
+    setLock(`[${address} ${type}] ${new Date().toString()}`);
+  }
 
   let prevList = localStorage.getItem('list') || '[]';
   prevList = JSON.parse(prevList);
@@ -73,10 +82,17 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       fs.renameSync(file.path, targetPath);
       dLog('log rename success ', file.path, targetPath, `[${address} ${type}]` );
       const handler = type === 'huawei' ? huaweiHandler : zeppHandler;
-      return handler.preCheck(targetPath).then(result => {
-        const baseUrl = `https://convert.fit/fit_upload/${fileName}`;
+      // 根据preCheck是否返回目录结果开判断压缩包的内容是否正确
+      return handler.preCheck(targetPath).then(dirs => {
 
-        Promise.resolve().then(() => {
+        dLog('log preCheck ', dirs ? 'success': 'fail', file.path, file.size, targetPath, `[${address} ${type}]` );
+        res.send({
+          code: dirs ? 1 : 0,
+        });
+        // 预检通过则直接进行解析流程
+        if (dirs) {
+          const baseUrl = `https://convert.fit/fit_upload/${fileName}`;
+
           handler.parser({
             data: {
               requestBody: {
@@ -88,18 +104,25 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
                   baseUrl,
                   fileName,
                 }
-              }
+              },
+              dirs,
             }
           })
-        })
-        dLog('log preCheck ', result ? 'success': 'fail', file.path, targetPath, `[${address} ${type}]` );
-        res.send({
-          success: !!result,
-        });
+        } else {
+          releaseLock();
+        }
       })
     }
   }
 });
+
+// 重置任务正在执行标志位
+app.get('/reset', (req, res) => {
+  releaseLock();
+  res.send({
+    code: checkLock() ? 1 : 0,
+  });
+})
 
 app.get('/404', (req, res) => {
   res.status(404).send('Not found')
@@ -117,4 +140,13 @@ app.use(function(err, req, res, next) {
 
 app.listen(9000, () => {
   dLog(`Server start on http://localhost:9000`);
+})
+
+
+process.on('error', (err) => {
+  dLog('process error ', err);
+})
+
+process.on('exit', (err) => {
+  dLog('process exit ', err);
 })

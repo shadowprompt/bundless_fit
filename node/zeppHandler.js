@@ -381,12 +381,8 @@ async function generate(dirs, info) {
 }
 async function parser(evt) {
     console.time('parser');
-    const { requestBody: { info = {} } = {} } = evt.data;
+    const { requestBody: { info = {} } = {}, dirs = [] } = evt.data;
     dLog('Parsing -> ', info.filePath);
-    const dirs = await preCheck(info.filePath);
-    if (!dirs) {
-        return; // 未找到
-    }
 
     await generate(dirs, info);
     console.timeEnd('parser');
