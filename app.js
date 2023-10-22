@@ -145,8 +145,15 @@ app.listen(9000, () => {
 
 process.on('error', (err) => {
   dLog('process error ', err);
+  releaseLock();
 })
 
 process.on('exit', (err) => {
   dLog('process exit ', err);
+  releaseLock();
+})
+
+process.on('unhandledrejection', (err) => {
+  dLog('process unhandledrejection ', err);
+  releaseLock();
 })
