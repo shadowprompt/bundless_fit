@@ -611,10 +611,9 @@ function pack(baseDir, info) {
     });
 
     function packFiles() {
-        Promise.all([
-            makeZip(baseDir + '/fit', `${baseFilePath}/${fileName}/fit.zip`),
-            makeZip(baseDir + '/tcx', `${baseFilePath}/${fileName}/tcx.zip`),
-        ]).then(() => {
+        makeZip(baseDir + '/fit', `${baseFilePath}/${fileName}/fit.zip`)
+          .then(() => makeZip(baseDir + '/tcx', `${baseFilePath}/${fileName}/tcx.zip`))
+          .then(() => {
             const fitUrl = `${baseUrl}/fit.zip`;
             const tcxUrl = `${baseUrl}/tcx.zip`;
 
@@ -660,7 +659,6 @@ module.exports = {
     checkLock,
     makeTCX,
     makeFIT,
-    runDirs,
     mkdirsSync,
     pack
 }

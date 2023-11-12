@@ -6,8 +6,6 @@ const extract = require('extract-zip')
 const { dLog } = require('@daozhao/utils');
 
 const { mkdirsSync, pack} = require('./tools');
-const { runDirs } = require('./tools');
-const {makeZip, sendMail} = require("./mail");
 
 const MINUTE_OFFSET = 6000; // 分钟误差（毫秒）
 // 映射成跟huawei统一的，方便统一处理

@@ -5,9 +5,6 @@ const extract = require('extract-zip');
 
 const { mkdirsSync, pack } = require('./tools');
 
-const { runDirs } = require('./tools')
-const { sendMail, makeZip } = require('./mail');
-
 function getItem(result) {
     const value = (result && result.v || '') + '';
     return value.trim();
