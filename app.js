@@ -2,13 +2,18 @@ const express = require('express')
 const path = require('path')
 const multer = require('multer');
 const fs = require("fs");
+const os = require("os");
 const cors = require('cors');
 const ejs = require('ejs');
 const { dLog, nodeStore } = require('@daozhao/utils');
 const {mkdirsSync, checkLock, releaseLock, setLock} = require("./node/tools");
 
-mkdirsSync('/tmp/fit_upload_temp');
-const upload = multer({ dest: '/tmp/fit_upload_temp/' });
+const ROOT_PATH = os.platform() === 'win32' ? 'D:/Dev': '/tmp';
+const UPLOAD_PATH = `${ROOT_PATH}/fit_upload`;
+const UPLOAD_TEMP_PATH = `${ROOT_PATH}/fit_upload_temp`;
+
+mkdirsSync(UPLOAD_TEMP_PATH);
+const upload = multer({ dest: UPLOAD_TEMP_PATH });
 const huaweiHandler = require('./node/huaweiHandler');
 const zeppHandler = require('./node/zeppHandler');
 const localStorage = nodeStore('../localStorage/bundless_fit');
@@ -17,7 +22,7 @@ const app = express();
 app.use(cors())
 app.set('views', __dirname + '/build'); // 修改ejs模板查找文件夹
 app.engine('html', ejs.__express); // 修改默认的模板后缀为.html
-app.use(express.static('/tmp'));
+app.use(express.static(ROOT_PATH));
 app.get('/', (req, res) => {
   let prevList = localStorage.getItem('list') || '[]';
   prevList = JSON.parse(prevList);
@@ -63,7 +68,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       ts,
     }
   ]));
-  mkdirsSync('/tmp/fit_upload_temp');
+  mkdirsSync(UPLOAD_TEMP_PATH);
 
   for(let i in req.files){
     const file = req.files[i];
@@ -75,7 +80,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       const originalName = file.originalname;
       const list = originalName.split('.');
       const ext = list[list.length - 1];
-      const baseFilePath = `/tmp/fit_upload`;
+      const baseFilePath = UPLOAD_PATH;
       mkdirsSync(baseFilePath);
       const targetPath= `${baseFilePath}/${fileName}.${ext}`;
       //使用同步方式重命名一个文件
