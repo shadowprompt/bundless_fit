@@ -6,7 +6,7 @@ const os = require("os");
 const cors = require('cors');
 const ejs = require('ejs');
 const { dLog, nodeStore } = require('@daozhao/utils');
-const {mkdirsSync, checkLock, releaseLock, setLock} = require("./node/tools");
+const {mkdirsSync, checkLock, releaseLock, setLock, record} = require("./node/tools");
 
 const ROOT_PATH = os.platform() === 'win32' ? 'D:/Dev': '/tmp';
 const UPLOAD_PATH = `${ROOT_PATH}/fit_upload`;
@@ -57,17 +57,11 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
     setLock(`[${address} ${type}] ${new Date().toString()}`);
   }
 
-  let prevList = localStorage.getItem('list') || '[]';
-  prevList = JSON.parse(prevList);
-  localStorage.setItem('list', JSON.stringify([
-    ...prevList,
-    {
-      address,
-      type,
-      fileName,
-      ts,
-    }
-  ]));
+  record({
+    address,
+    type,
+    fileName,
+  });
   mkdirsSync(UPLOAD_TEMP_PATH);
 
   for(let i in req.files){
