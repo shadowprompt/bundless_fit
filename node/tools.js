@@ -623,6 +623,7 @@ function pack(baseDir, info) {
                 type,
                 fileName,
                 status: 'success',
+                fileCreatedCount,
             });
 
 
@@ -663,9 +664,8 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 }
 
 function recordToWeb(recordInfo) {
-    axios.post('https://fit.bundless.cn/api/record', {
-        fileName: recordInfo.fileName,
-        status: 'success'
+    axios.post('https://convert.fit/api/record', {
+        list: [recordInfo],
     }).then(() => {
         dLog('log record', 'success', recordInfo.fileName);
     }).catch(err => {
