@@ -631,7 +631,7 @@ function pack(baseDir, info) {
             sendMail('qq', {
                 from: "justnotify@qq.com",
                 to: "jinicgood@qq.com", // 不再对外发送邮件
-                subject: address + " 运动记录转换完成通知 https://convert.fit",
+                subject: `${address} ${type} ${fileName} ${fileCreatedCount} 运动记录转换完成通知 https://convert.fit`,
                 // text: "Plaintext version of the message",
                 html: `您提交的运动记录已经成功转换成fit和tcx格式，结果文件已经准备好了，fit格式结果下载地址<a href="${fitUrl}" target="_blank">${fitUrl}</a>，tcx格式结果下载地址<a href="${tcxUrl}" target="_blank">${tcxUrl}</a>`,
             });
