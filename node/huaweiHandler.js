@@ -89,7 +89,7 @@ function collectData(motion, baseDir) {
             }
         }, {tp});
         //
-        if (['lbs', 'h-r', 's-r', 'rs'].includes(data.tp)) {
+        if (['lbs', 'h-r', 's-r', 'pad', 'rs'].includes(data.tp)) {
             const { ts, isoTime } = calcDateFlag(data, startTimeTs);
             // 将记录的第一个时间戳作为startTimeTs
             if (startTimeTs === 0) {
@@ -119,6 +119,8 @@ function collectData(motion, baseDir) {
                 }
             } else if(data.tp === 's-r') { // 使用rpm单位时，需要换算：除以2
                 targetTrack.Cadence = parseInt(data.v / 2);
+            } else if(data.tp === 'pad') { // 划船机
+                targetTrack.Cadence = data.v;
             } else if(data.tp === 'rs') { // 配速
                 targetTrack.Extensions = {
                     'ns3:TPX': {

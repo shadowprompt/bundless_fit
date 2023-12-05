@@ -40,6 +40,7 @@ const sportTypeFitMap = {
     257: [11, 0], // 步行
     281: [11, 0], // 室内步行
     283: [10, 26], // 跳绳->有氧训练
+    274: [15, 14], // 划船机
     279: [18, 0], // 综合运动
     // 综合运动 [18, 0]
 };
@@ -613,21 +614,21 @@ function pack(baseDir, info) {
 
     function packFiles() {
         makeZip(baseDir + '/fit', `${baseFilePath}/${fileName}/fit.zip`)
-          .then(() => makeZip(baseDir + '/tcx', `${baseFilePath}/${fileName}/tcx.zip`))
-          .then(() => {
+            .then(() => makeZip(baseDir + '/tcx', `${baseFilePath}/${fileName}/tcx.zip`))
+            .then(() => {
             const fitUrl = `${baseUrl}/fit.zip`;
             const tcxUrl = `${baseUrl}/tcx.zip`;
 
+            dLog('log zip success', `[${address} ${type}] ${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
+
             record({
-                address,
-                type,
-                fileName,
-                status: 'success',
-                fileCreatedCount,
+              address,
+              type,
+              fileName,
+              status: 'success',
+              fileCreatedCount,
             });
 
-
-            dLog('log zip success', `[${address} ${type}] ${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
             sendMail('qq', {
                 from: "justnotify@qq.com",
                 to: "jinicgood@qq.com", // 不再对外发送邮件
