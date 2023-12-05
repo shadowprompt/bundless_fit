@@ -75,10 +75,19 @@ function collectData(motion, baseDir) {
 
     detailValueList.forEach(item => {
         const [tp, ...rest] = item.split(';').filter(item => !/\s+/.test(item));
-        const data = rest.map(item => item.split('=')).reduce((acc, [key, value]) => ({
-            ...acc,
-            [key]: value
-        }), {tp});
+        const data = rest.map(item => item.split('=')).reduce((acc, [key, value]) => {
+            // 如果已经有了，不再覆盖，因为发现最后一条后面会有
+            // tp=rs;k=3285;v=0;(null);k=1700001029000;v=0;(null);k=1700001034000;v=0;
+            // 后面的k=1700001029000会覆盖掉前面的
+            if (Reflect.has(acc, key)) {
+                return acc;
+            } else {
+                return {
+                    ...acc,
+                    [key]: value
+                };
+            }
+        }, {tp});
         //
         if (['lbs', 'h-r', 's-r', 'rs'].includes(data.tp)) {
             const { ts, isoTime } = calcDateFlag(data, startTimeTs);
