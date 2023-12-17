@@ -665,7 +665,7 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 }
 
 function recordToWeb(recordInfo) {
-    axios.post('https://gateway.daozhao.com.cn/convert/record', {
+    axios.post('https://gateway.daozhao.com/convert/record', {
         list: [recordInfo],
     }).then(() => {
         dLog('log record', 'success', recordInfo.fileName);
