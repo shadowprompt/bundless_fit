@@ -8,6 +8,8 @@ function App() {
     const [address, setAddress] = useState('');
     const [fileList, setFileList] = useState([]);
     const [uploading, setUploading] = useState(false);
+    const [payment, setPayment] = useState('alipay');
+    const [paid, setPaid] = useState('5');
     const [importList] = useState([{
         label: '高驰',
         url: 'https://trainingcn.coros.com/admin/views/activities',
@@ -92,6 +94,12 @@ function App() {
     const onTypeChange = (e) => {
         setType(e.target.value);
     };
+    const onPaymentChange = (e) => {
+      setPayment(e.target.value);
+    };
+    const onPaidChange = (e) => {
+      setPaid(e.target.value);
+    };
     const handleUpload = () => {
         const formData = new FormData();
         fileList.forEach((file) => {
@@ -99,13 +107,15 @@ function App() {
         });
         formData.append('type', type);
         formData.append('address', address);
+        formData.append('payment', payment);
+        formData.append('paid', paid);
         setUploading(true);
         // 指定本地开发和本服务器开发
         const targetUrl = window.location.href.includes('localhost')
             ? 'http://localhost:9000/upload'
             : window.location.search.includes('source=')
                 ? '/upload'
-                : 'https://convert.fit/upload';
+                : 'https://www.fitconverter.com/upload';
         fetch(targetUrl, {
             method: 'POST',
             body: formData,
@@ -253,6 +263,20 @@ function App() {
                     </Button>
                 </div>
             </section>
+
+            <Divider>4. 支付方式</Divider>
+            <div className="upload-type">
+              <Radio.Group onChange={onPaymentChange} value={payment}>
+                <Radio value="alipay">支付宝</Radio>
+                <Radio value="wechat">微信</Radio>
+              </Radio.Group>
+            </div>
+
+            <Divider>5. 支付金额</Divider>
+            <div className="upload-type">
+              <Input placeholder="输入金额" value={paid} onChange={onPaidChange}/>
+            </div>
+
             <Divider plain={true}>如果本工具解决了您的难题，可以给我加🍗哦。</Divider>
             <div className="img-box">
                 <img className="zfb" src="/zfb.png"
