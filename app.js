@@ -44,6 +44,8 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
   const requestBody =  req.body || {};
   const address = requestBody.address;
   const type = requestBody.type;
+  const payment = requestBody.payment;
+  const paid = requestBody.paid || 0;
   const ts = Date.now();
   const fileName = 'fit_' + ts;
   dLog('log upload ', fileName, `[${address} ${type}]` );
@@ -61,6 +63,8 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
     address,
     type,
     fileName,
+    payment,
+    paid: paid * 1,
   });
   mkdirsSync(UPLOAD_TEMP_PATH);
 
