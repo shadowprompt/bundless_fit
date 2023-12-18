@@ -603,7 +603,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 }
 
 function pack(baseDir, info) {
-    const { address, type, baseUrl, baseFilePath, fileName } = info;
+    const { address, type, payment, paid, baseUrl, baseFilePath, fileName } = info;
 
     mkdirsSync(path.join(baseDir, 'csv'));
     mkdirsSync(path.join(baseDir, 'fit'));
@@ -622,11 +622,13 @@ function pack(baseDir, info) {
             dLog('log zip success', `[${address} ${type}] ${baseFilePath}/${fileName}/fit.zip and tcx.zip`);
 
             record({
-              address,
-              type,
-              fileName,
-              status: 'success',
-              fileCreatedCount,
+                address,
+                type,
+                fileName,
+                payment,
+                paid,
+                status: 'success',
+                fileCreatedCount,
             });
 
             sendMail('qq', {
@@ -665,6 +667,7 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 }
 
 function recordToWeb(recordInfo) {
+    // return console.log('recordToWeb ~ ', recordInfo);
     axios.post('https://gateway.daozhao.com/convert/record', {
         list: [recordInfo],
     }).then(() => {
