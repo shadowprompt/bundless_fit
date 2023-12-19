@@ -94,7 +94,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
         });
         // 预检通过则直接进行解析流程
         if (dirs) {
-          const baseUrl = `https://convert.fit/fit_upload/${fileName}`;
+          const baseUrl = `https://www.fitconverter.com/fit_upload/${fileName}`;
 
           handler.parser({
             data: {

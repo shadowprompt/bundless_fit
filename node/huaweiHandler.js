@@ -111,7 +111,7 @@ async function collectData(motion, baseDir) {
     }
 
     if (isInChinaMainland === false) {
-        console.warn('不在中国大陆 ~ ', address);
+        console.warn('不在中国大陆 ~ ', address, motion.coordinate);
     }
 
     detailValueList.forEach(item => {
@@ -135,7 +135,7 @@ async function collectData(motion, baseDir) {
                     LatitudeDegrees: data.lat, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
                     LongitudeDegrees: data.lon,
                     // 大陆的坐标则需要偏移
-                    positionType: isInChinaMainland === true ? 'gcj02' : '', // 增加一个type标记当前坐标系，方便后续转换
+                    positionType: motion.coordinate, // 增加一个type标记当前坐标系，方便后续转换
                 }
                 targetTrack.AltitudeMeters = data.alt;
                 targetTrack._pointIndex = data.k; // 轨迹点数
@@ -250,7 +250,7 @@ async function parser(evt) {
     const { requestBody: { info = {} } = {}, dirs = [] } = evt.data;
     dLog('Parsing -> ', info.filePath);
 
-    generate(dirs, info);
+    await generate(dirs, info);
     console.timeEnd('parser');
 
     return {

@@ -181,7 +181,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
                                 Trackpoint: trackList.map(item => {
                                     // 加入gcj02坐标系转换为wgs84
                                     if (item.Position && item.Position.positionType) {
-                                        const transformer = item.Position.positionType === 'gcj02' ? gpsTransformer.gcj02towgs84 : justReturnPosition;
+                                        const transformer = item.Position.positionType === 'GCJ02' ? gpsTransformer.gcj02towgs84 : justReturnPosition;
                                         const [LongitudeDegrees, LatitudeDegrees] = transformer(item.Position.LongitudeDegrees, item.Position.LatitudeDegrees);
                                         return {
                                             ...item,
@@ -275,7 +275,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 
             if (item.Position) {
                 // 加入gcj02坐标系转换为wgs84
-                const transformer = item.Position.positionType === 'gcj02' ? gpsTransformer.gcj02towgs84 : justReturnPosition;
+                const transformer = item.Position.positionType === 'GCJ02' ? gpsTransformer.gcj02towgs84 : justReturnPosition;
                 const [LongitudeDegrees, LatitudeDegrees] = transformer(item.Position.LongitudeDegrees, item.Position.LatitudeDegrees);
                 eachList.push(
                   ['position_lat', parseInt(LatitudeDegrees * ( Math.pow(2, 31) / 180 )), 'semicircles'],
@@ -634,7 +634,7 @@ function pack(baseDir, info) {
             sendMail('qq', {
                 from: "justnotify@qq.com",
                 to: "jinicgood@qq.com", // 不再对外发送邮件
-                subject: `${address} ${type} ${fileName} ${fileCreatedCount} 运动记录转换完成通知 https://convert.fit`,
+                subject: `${address} ${type} ${fileName} ${fileCreatedCount} 运动记录转换完成通知 https://www.fitconverter.com`,
                 // text: "Plaintext version of the message",
                 html: `您提交的运动记录已经成功转换成fit和tcx格式，结果文件已经准备好了，fit格式结果下载地址<a href="${fitUrl}" target="_blank">${fitUrl}</a>，tcx格式结果下载地址<a href="${tcxUrl}" target="_blank">${tcxUrl}</a>`,
             });
