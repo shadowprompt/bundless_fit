@@ -3,7 +3,7 @@ const path = require('path');
 const { dLog } = require('@daozhao/utils');
 const extract = require('extract-zip');
 
-const { mkdirsSync, pack } = require('./tools');
+const { mkdirsSync, pack, fetchGeoInfo } = require('./tools');
 
 function getItem(result) {
     const value = (result && result.v || '') + '';
@@ -62,7 +62,7 @@ function calcDateFlag(data, startTs) {
  * @param motion
  * @returns {{trackList: *[], simplifyValue: any}}
  */
-function collectData(motion, baseDir) {
+async function collectData(motion, baseDir) {
     const attribute = motion.attribute;
     const infoList = attribute.split('&').filter(item => item).map(item => item.split('@is'));
     const [detailLabel, detailValueStr] = infoList.find((label, value) => /DETAIL/i.test(label)) || [];
@@ -73,9 +73,13 @@ function collectData(motion, baseDir) {
     const trackList = [];
     let startTimeTs = 0;
 
-    detailValueList.forEach(item => {
+    // 当前是否在中国大陆境内
+    let isInChinaMainland;
+    let address = '';
+
+    function getItemData(item) {
         const [tp, ...rest] = item.split(';').filter(item => !/\s+/.test(item));
-        const data = rest.map(item => item.split('=')).reduce((acc, [key, value]) => {
+        return rest.map(item => item.split('=')).reduce((acc, [key, value]) => {
             // 如果已经有了，不再覆盖，因为发现最后一条后面会有
             // tp=rs;k=3285;v=0;(null);k=1700001029000;v=0;(null);k=1700001034000;v=0;
             // 后面的k=1700001029000会覆盖掉前面的
@@ -88,6 +92,26 @@ function collectData(motion, baseDir) {
                 };
             }
         }, {tp});
+    }
+
+    function getFirstGPS(list) {
+        for (const item of list) {
+            const data = getItemData(item);
+            if (data.tp === 'lbs' && data.lat && data.lon > 0 ) {
+                return data;
+            }
+        }
+    }
+    // 根据第一个GPS信息判断是否为中国大陆境内
+    const firstGPSData = getFirstGPS(detailValueList);
+    if (firstGPSData) {
+        const geoInfo = await fetchGeoInfo(firstGPSData.lon, firstGPSData.lat);
+        isInChinaMainland = geoInfo.isInChinaMainland;
+        address = geoInfo.address;
+    }
+
+    detailValueList.forEach(item => {
+        const data = getItemData(item);
         //
         if (['lbs', 'h-r', 's-r', 'pad', 'rs'].includes(data.tp)) {
             const { ts, isoTime } = calcDateFlag(data, startTimeTs);
@@ -106,7 +130,8 @@ function collectData(motion, baseDir) {
                 targetTrack.Position = {
                     LatitudeDegrees: data.lat, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
                     LongitudeDegrees: data.lon,
-                    positionType: 'gcj02', // 增加一个type标记当前坐标系，方便后续转换
+                    // 大陆的坐标则需要偏移
+                    positionType: isInChinaMainland === true ? 'gcj02' : '', // 增加一个type标记当前坐标系，方便后续转换
                 }
                 targetTrack.AltitudeMeters = data.alt;
                 targetTrack._pointIndex = data.k; // 轨迹点数
@@ -143,6 +168,7 @@ function collectData(motion, baseDir) {
     fs.writeFileSync(path.join(baseDir, `json/${localTime}.json`), JSON.stringify({
         trackList,
         simplifyValue,
+        address,
     }, null ,2));
 
     return {

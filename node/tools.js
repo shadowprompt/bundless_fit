@@ -129,7 +129,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
 
         let data = fs.readFileSync(`${basePath}/json/${jsonFileName}`);
         data = JSON.parse(data.toString())
-        const { trackList = [], simplifyValue } = data;
+        const { trackList = [], simplifyValue, address, } = data;
         if (trackList.length === 0) {
             return Promise.resolve(0);
         }
@@ -208,7 +208,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
             mkdirsSync(`${basePath}/tcx/${simplifyValue.sportType}`);
             fs.writeFileSync(`${basePath}/tcx/${simplifyValue.sportType}/${commonFileName}.tcx`, xml);
             fileCreatedCount = fileCreatedCount + 1
-            dLog('tcx success', commonFileName, `${fileCreatedCount}/${totalLength}`);
+            dLog('tcx success', commonFileName, address, `${fileCreatedCount}/${totalLength}`);
             resolve('tcx');
         });
     }
@@ -221,7 +221,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 
         let data = fs.readFileSync(`${basePath}/json/${jsonFileName}`);
         data = JSON.parse(data.toString())
-        const { trackList = [], simplifyValue } = data;
+        const { trackList = [], simplifyValue, address } = data;
         if (trackList.length === 0) {
             return Promise.resolve(0);
         }
@@ -587,7 +587,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                     if (!error && !stderr) {
                         // 成功
                         fileCreatedCount = fileCreatedCount + 1
-                        dLog('fit success', commonFileName, `${fileCreatedCount}/${totalLength}`);
+                        dLog('fit success', commonFileName, address, `${fileCreatedCount}/${totalLength}`);
                     } else {
                         // 失败
                         dLog('fit fail', command, fileCreatedCount, error);
@@ -667,7 +667,7 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 }
 
 function recordToWeb(recordInfo) {
-    // return console.log('recordToWeb ~ ', recordInfo);
+    return console.log('recordToWeb ~ ', recordInfo);
     axios.post('https://gateway.daozhao.com/convert/record', {
         list: [recordInfo],
     }).then(() => {
@@ -681,6 +681,35 @@ function record(recordInfo = {}, loc) {
     recordToWeb(recordInfo);
 }
 
+/**
+ * 根据经纬度获取地址信息，以及是否在中国大陆
+ * @param lan
+ * @param long
+ * @returns {Promise<axios.AxiosResponse<any> | {address: string}>}
+ */
+function fetchGeoInfo(long, lan) {
+    const url = `https://restapi.amap.com/v3/geocode/regeo?location=${long},${lan}&key=5a7f82b0cb8399c45eff8a41df76e218`;
+    return axios.get(url).then(res => {
+        const data = res.data || {};
+        if (data.status === '1') {
+            const address = data.regeocode.formatted_address || '';
+            console.log('address ~ ', address, long, lan);
+            return {
+                address,
+                result: /省|自治区|北京|天津|上海|重庆/.test(address),
+            }
+        } else {
+            return {
+                address: '',
+            };
+        }
+    }).catch(err => {
+        return {
+            address: '',
+        };
+    });
+}
+
 module.exports = {
     setLock,
     releaseLock,
@@ -690,4 +719,5 @@ module.exports = {
     mkdirsSync,
     pack,
     record,
+    fetchGeoInfo,
 }
