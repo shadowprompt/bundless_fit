@@ -110,6 +110,10 @@ async function collectData(motion, baseDir) {
         address = geoInfo.address;
     }
 
+    if (isInChinaMainland === false) {
+        console.warn('不在中国大陆 ~ ', address);
+    }
+
     detailValueList.forEach(item => {
         const data = getItemData(item);
         //
@@ -234,9 +238,9 @@ async function generate(dirs, info) {
     const motionPath = baseDir + '/' + MOTION_FILE;
     const motionList =  require(motionPath);
 
-    motionList.forEach(motion => {
-        collectData(motion, baseDir);
-    })
+    for (let motion of motionList) {
+        await collectData(motion, baseDir);
+    }
     // 数据已收集完毕再次执行generate
     generate(dirs, info);
 }

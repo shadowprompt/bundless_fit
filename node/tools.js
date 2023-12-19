@@ -208,7 +208,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
             mkdirsSync(`${basePath}/tcx/${simplifyValue.sportType}`);
             fs.writeFileSync(`${basePath}/tcx/${simplifyValue.sportType}/${commonFileName}.tcx`, xml);
             fileCreatedCount = fileCreatedCount + 1
-            dLog('tcx success', commonFileName, address, `${fileCreatedCount}/${totalLength}`);
+            dLog('tcx success', commonFileName, simplifyValue.sportType, address, `${fileCreatedCount}/${totalLength}`);
             resolve('tcx');
         });
     }
@@ -581,13 +581,13 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                 const jarPath = path.join(__dirname, './FitCSVTool.jar')
                 const command = `${javaPath} -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
                 // const command = `java -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
-                dLog('csv success', commonFileName, `${fileCreatedCount}/${totalLength}`);
+                dLog('csv success', commonFileName, simplifyValue.sportType, address, `${fileCreatedCount}/${totalLength}`);
 
                 exec(command, (error, stdout, stderr) => {
                     if (!error && !stderr) {
                         // 成功
                         fileCreatedCount = fileCreatedCount + 1
-                        dLog('fit success', commonFileName, address, `${fileCreatedCount}/${totalLength}`);
+                        dLog('fit success', commonFileName, simplifyValue.sportType, address, `${fileCreatedCount}/${totalLength}`);
                     } else {
                         // 失败
                         dLog('fit fail', command, fileCreatedCount, error);
@@ -667,7 +667,7 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 }
 
 function recordToWeb(recordInfo) {
-    return console.log('recordToWeb ~ ', recordInfo);
+    // return console.log('recordToWeb ~ ', recordInfo);
     axios.post('https://gateway.daozhao.com/convert/record', {
         list: [recordInfo],
     }).then(() => {
@@ -683,8 +683,8 @@ function record(recordInfo = {}, loc) {
 
 /**
  * 根据经纬度获取地址信息，以及是否在中国大陆
- * @param lan
  * @param long
+ * @param lan
  * @returns {Promise<axios.AxiosResponse<any> | {address: string}>}
  */
 function fetchGeoInfo(long, lan) {
@@ -693,10 +693,10 @@ function fetchGeoInfo(long, lan) {
         const data = res.data || {};
         if (data.status === '1') {
             const address = data.regeocode.formatted_address || '';
-            console.log('address ~ ', address, long, lan);
+            const isInChinaMainland = /省|自治区|北京|天津|上海|重庆/.test(address);
             return {
                 address,
-                result: /省|自治区|北京|天津|上海|重庆/.test(address),
+                isInChinaMainland,
             }
         } else {
             return {
