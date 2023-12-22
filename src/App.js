@@ -170,14 +170,27 @@ function App() {
                 <div className="upload-desc-zepp">
                     <p>将zepp官网导出数据解压（可能需要密码）至文件夹</p>
                     <p>将该文件夹中的以下文件</p>
-                    <p className="sub"><b>SPORT/SPOR_xxx.csv</b></p>
-                    <p className="sub"><b>HEARTRATE_AUTO/HEARTRATE_AUTO_xxx.csv</b></p>
                     <p className="sub"><b>ACTIVITY_MINUTE/ACTIVITY_MINUTE_xxx.csv</b></p>
+                    <p className="sub"><b>HEARTRATE_AUTO/HEARTRATE_AUTO_xxx.csv</b></p>
+                    <p className="sub"><b>SPORT/SPOR_xxx.csv</b></p>
                     <p>放至一个文件夹内，打包成zip压缩包上传</p>
                     <p className="img-box">
                       <img src='/zip-intro-zepp.png' alt='zepp压缩包结构说明' />
                     </p>
                 </div>
+            );
+        } else if (type === 'xiaomi') {
+            return (
+              <div className="upload-desc-xiaomi">
+                <p>将小米官网导出数据解压（可能需要密码）至文件夹</p>
+                <p>将该文件夹中的以下文件</p>
+                <p className="sub"><b>XXX_MiFitness_hlth_center_fitness_data.csv</b></p>
+                <p className="sub"><b>XXX_MiFitness_hlth_center_sport_record.csv</b></p>
+                <p>放至一个文件夹内，打包成zip压缩包上传</p>
+                <p className="img-box">
+                  <img src='/zip-intro-xiaomi.png' alt='小米压缩包结构说明' />
+                </p>
+              </div>
             );
         }
     }
@@ -224,6 +237,7 @@ function App() {
                     <Radio.Group onChange={onTypeChange} value={type}>
                         <Radio value="huawei">华为运动健康</Radio>
                         <Radio value="zepp">Zepp Life（原小米运动）</Radio>
+                        <Radio value="xiaomi">小米运动健康</Radio>
                     </Radio.Group>
                 </div>
                 <Divider orientation="left" plain>待上传压缩包结构说明</Divider>
