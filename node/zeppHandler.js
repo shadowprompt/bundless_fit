@@ -60,7 +60,7 @@ function getDateTime(s) {
 
 /**
  * 根据开始时间和持续时间计算出对应的分钟区间
- * @param startTime
+ * @param startTimeStr
  * @param durableSeconds
  * @returns {*[]}
  */
@@ -186,7 +186,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         return acc + step;
     }, 0);
 
-    const trackList = sportMinuteList.map((item) => {
+    let trackList = sportMinuteList.map((item) => {
         const {year, month, day, hours, minutes, seconds} = getDateTime(item);
         const utcTime = toUTCTimeStr({year, month, day, hours, minutes, seconds});
         const trackpoint = {
@@ -200,7 +200,10 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
             const ts = new Date(`${year}-${month}-${day} ${time}:00`);
             return item - ts >= 0 && item - ts < 60000;
         })
+        // 标记是否有有效数据
+        let hasData = false;
         if (targetHeartRateList[0]) {
+            hasData = true;
             trackpoint.HeartRateBpm = {
                 $: {
                     'xsi:type': 'HeartRateInBeatsPerMinute_t'
@@ -209,11 +212,17 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
             }
         }
         if (targetStepList[0]) {
+            hasData = true;
             trackpoint.Cadence = parseInt(targetStepList[0][1] / 2);
         }
         dLog(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
-        return trackpoint;
+
+        if (hasData) {
+            return trackpoint;
+        }
     })
+    // 仅保留有有效数据的
+    trackList = trackList.filter(item => item);
 
     const simplifyValue = {
         totalTime: sportTime * 1000,
