@@ -131,11 +131,22 @@ async function collectData(motion, baseDir) {
                 trackList.push(targetTrack);
             }
             if (data.tp === 'lbs' && data.lat && data.lon > 0 ) {
+                // 根据坐标系或者供应商判断坐标系
+                let positionType = 'GCJ02';
+                if (motion.coordinate && motion.coordinate.toUpperCase() === 'GCJ02') {
+                    positionType = 'GCJ02';
+                } else if (motion.coordinate && motion.coordinate.toUpperCase() === 'WGS84') {
+                    positionType = 'WGS84';
+                } else if (motion.vendor && motion.vendor.toUpperCase() === 'AMAP') {
+                    positionType = 'GCJ02';
+                } else {
+                    dLog('warn', 'unknown postionType');
+                }
                 targetTrack.Position = {
                     LatitudeDegrees: data.lat, // 使用semicircles单位时，需要换算：semicircles=degrees * ( 2^31 / 180 )
                     LongitudeDegrees: data.lon,
                     // 大陆的坐标则需要偏移
-                    positionType: motion.coordinate, // 增加一个type标记当前坐标系，方便后续转换
+                    positionType: positionType, // 增加一个type标记当前坐标系，方便后续转换
                 }
                 targetTrack.AltitudeMeters = data.alt;
                 targetTrack._pointIndex = data.k; // 轨迹点数
