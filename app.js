@@ -16,6 +16,7 @@ mkdirsSync(UPLOAD_TEMP_PATH);
 const upload = multer({ dest: UPLOAD_TEMP_PATH });
 const huaweiHandler = require('./node/huaweiHandler');
 const zeppHandler = require('./node/zeppHandler');
+const xiaomiHandler = require('./node/xiaomiHandler');
 const localStorage = nodeStore('../localStorage/bundless_fit');
 const app = express();
 
@@ -84,7 +85,12 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
       //使用同步方式重命名一个文件
       fs.renameSync(file.path, targetPath);
       dLog('log rename success ', file.path, targetPath, `[${address} ${type}]` );
-      const handler = type === 'huawei' ? huaweiHandler : zeppHandler;
+      const handler = type === 'huawei'
+        ? huaweiHandler
+        : type === 'zepp'
+          ? zeppHandler
+          : xiaomiHandler
+      ;
       // 根据preCheck是否返回目录结果开判断压缩包的内容是否正确
       return handler.preCheck(targetPath).then(dirs => {
 

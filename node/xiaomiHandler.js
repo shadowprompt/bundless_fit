@@ -267,8 +267,8 @@ function findBaseDir(filePath) {
     }
 
     let matchedList = [];
-    matchedList.push(fileList.find(item => /hlth_center_sport_record.+\.csv/i.test(item)));
-    matchedList.push(fileList.find(item => /hlth_center_fitness_data.+\.csv/i.test(item)));
+    matchedList.push(fileList.find(item => /hlth_center_sport_record\.csv/i.test(item)));
+    matchedList.push(fileList.find(item => /hlth_center_fitness_data\.csv/i.test(item)));
     matchedList.unshift(filePath);
 
     matchedList = matchedList.filter(item => item); // 过滤掉空的
