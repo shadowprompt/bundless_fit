@@ -19,22 +19,24 @@ const sportTypeTcxMap = {
     257: 'Walking', // 户外步行
     258: 'Running', // 户外跑步
     259: 'Biking', // 骑自行车
+    262: 'Swimming', // 游泳
     264: 'Running', // Treadmill 室内跑步（跑步机）
-    // 265: 'IndoorBike', // 室内骑自行车
+    265: 'IndoorBike', // 室内骑自行车
     // 273: 'CrossTrainer ', // 椭圆机
-    // 274: 'RowMachine', // 划船机
+    274: 'RowMachine', // 划船机
     // 290: 'Rower', // 划船机划水模式
     // 291: 'Rowerstrength', // 划船机力量模式
     279: 'MultiSport', // 综合运动 不好归类的都在此类
-    // 281: 'Walking', // 室内步行
-    // 283: 'RopeSkipping', // 跳绳
-    // 129: 'Badminton', // 羽毛球
+    281: 'Walking', // 室内步行
+    283: 'RopeSkipping', // 跳绳
+    129: 'Badminton', // 羽毛球
 };
 
 const sportTypeFitMap = {
     258: [1, 0], // 户外跑步
     264: [1, 1], // 室内跑步机
     259: [2, 0], // 户外骑自行车
+    262: [5, 17], // 游泳
     265: [2, 6], // 室内骑自行车
     129: [0, 0], // 羽毛球 -> 通用
     257: [11, 0], // 步行
@@ -270,7 +272,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         function getRecord(item, timeFit) {
             const eachList = [
                 ['Data', 0, 'record'],
-                ['timestamp', timeFit, 's']
+                ['timestamp', timeFit, 's'],
+                ['activity_type', sportType, '']
             ];
 
             if (item.Position) {
@@ -425,6 +428,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                     ['Data', 0, 'lap'],
                     ['timestamp', lapEndTimeFit, 's'],
                     ['start_time', lapStartTimeFit],
+                    ['sport', sportType, ''],
                     ['total_timer_time', elapsedTimeSeconds, 's'],
                     ['total_elapsed_time', elapsedTimeSeconds, 's'],
                     ['total_distance', lapTotalDistance],
@@ -494,6 +498,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['Definition', 0, 'lap'],
                   ['timestamp', 1],
                   ['start_time', 1],
+                  ['sport', 1],
                   ['total_timer_time', 1],
                   ['total_elapsed_time', 1],
                   ['total_distance', 1],
@@ -509,6 +514,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['Data', 0, 'lap'],
                   ['timestamp', endTimeFit, 's'],
                   ['start_time', startTimeFit],
+                  ['sport', sportType, ''],
                   ['total_timer_time', totalTimeSeconds, 's'],
                   ['total_elapsed_time', totalTimeSeconds, 's'],
                   ['total_distance', simplifyValue.totalDistance, 'm'],
@@ -667,7 +673,7 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 }
 
 function recordToWeb(recordInfo) {
-    // return console.log('recordToWeb ~ ', recordInfo);
+    return console.log('recordToWeb ~ ', recordInfo);
     axios.post('https://gateway.daozhao.com/convert/record', {
         list: [recordInfo],
     }).then(() => {
