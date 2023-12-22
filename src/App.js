@@ -245,40 +245,9 @@ function App() {
                     { typeRender(type) }
                     <div className="upload-intro">更多说明可以参考<a href="https://www.toutiao.com/article/7260290208145637929/" target="_blank" rel="noreferrer">华为、小米运动记录转fit和tcx格式工具转换效果展示及使用教程</a></div>
                 </div>
-
-                <Divider>3. 上传数据</Divider>
-
-                <div className="upload-box">
-                    <Upload onRemove={onRemove} beforeUpload={beforeUpload} fileList={fileList} accept="zip" maxCount={1}>
-                        <Button icon={<UploadOutlined />}>选择文件</Button>
-                    </Upload>
-
-                    {
-                        (fileList.length === 0 || !address) && (
-                            <div>
-                                {
-                                    (!address) && (
-                                        <div style={{color: "red"}}>邮箱地址别忘了填写哦，转换结果需要通过邮箱发送</div>
-                                    )
-                                }
-                            </div>
-                        )
-                    }
-                    <Button
-                        type="primary"
-                        onClick={handleUpload}
-                        disabled={fileList.length === 0 || !address}
-                        loading={uploading}
-                        style={{
-                            marginTop: 16,
-                        }}
-                    >
-                        {uploading ? '正在上传' : '确认上传'}
-                    </Button>
-                </div>
             </section>
 
-            <Divider>4. 支付方式</Divider>
+            <Divider>3. 支付方式</Divider>
             <div className="upload-type">
               <Radio.Group onChange={onPaymentChange} value={payment}>
                 <Radio value="alipay">支付宝</Radio>
@@ -286,9 +255,40 @@ function App() {
               </Radio.Group>
             </div>
 
-            <Divider>5. 支付金额</Divider>
+            <Divider>4. 支付金额</Divider>
             <div className="upload-type">
               <Input placeholder="输入金额" value={paid} onChange={onPaidChange}/>
+            </div>
+
+            <Divider>5. 上传数据</Divider>
+
+            <div className="upload-box">
+              <Upload onRemove={onRemove} beforeUpload={beforeUpload} fileList={fileList} accept="zip" maxCount={1}>
+                <Button icon={<UploadOutlined />}>选择文件</Button>
+              </Upload>
+
+              {
+                (fileList.length === 0 || !address) && (
+                  <div>
+                    {
+                      (!address) && (
+                        <div style={{color: "red"}}>邮箱地址别忘了填写哦，转换结果需要通过邮箱发送</div>
+                      )
+                    }
+                  </div>
+                )
+              }
+              <Button
+                type="primary"
+                onClick={handleUpload}
+                disabled={fileList.length === 0 || !address}
+                loading={uploading}
+                style={{
+                  marginTop: 16,
+                }}
+              >
+                {uploading ? '正在上传' : '确认上传'}
+              </Button>
             </div>
 
             <Divider plain={true}>如果本工具解决了您的难题，可以给我加🍗哦。</Divider>
