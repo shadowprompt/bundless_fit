@@ -359,33 +359,47 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         )
 
         const lengthList = [];
-        let total_stokes = 0;
 
-        if (sportType === 5) {
-            let stokesInfo = [0, startTimeFit];
-            trackList.forEach((item, index, list) => {
-                const timeTs = new Date(item.Time).getTime();
-                const timeFit = parseInt((timeTs - FIT_EPOCH_MS) / 1000);
+        if (sportType === 5 && simplifyValue._source === 'xiaomi') {
+            const _avgCircleCount = simplifyValue.totalDistance/simplifyValue.pool_width;
+            const avgCircleCount = Math.ceil(_avgCircleCount);
+            // 平均每个circle的strokes
+            const _avgStrokes = simplifyValue.stroke_count/_avgCircleCount;
+            const avgStrokes = Math.ceil(_avgStrokes);
+            // 最后一个circle的strokes根据区分是否有半圈区分
+            const lastCircleStrokes = avgCircleCount > _avgCircleCount ? simplifyValue.stroke_count - avgStrokes * Math.round(avgCircleCount) : avgStrokes;
 
-                const [indexPrev, timeFitPrev] = stokesInfo;
-                const timeGo = timeFit - timeFitPrev;
-                const stokes = item.Cadence || 0;
-                total_stokes = total_stokes + stokes;
+            const totalElapsedTimeFit = endTimeFit - startTimeFit;
+            // 平均每个circle的耗时
+            const avgElapsedTimeFit =  Math.round(totalElapsedTimeFit/_avgCircleCount);
 
-                if (index === 0) {
+            let lastStartTimeFit = startTimeFit;
+            lengthList.push(
+              gen([['Definition', 0, 'length'], ['timestamp', 1], ['start_time', 1], ['total_elapsed_time',	1],	['total_timer_time', 1],['total_strokes',	1]]),
+            )
+
+            for(let i = 1;i<=avgCircleCount;i++) {
+                // 最后一个circle
+                if (i === avgCircleCount) {
                     lengthList.push(
-                      gen([['Definition', 0, 'length'], ['start_time', 1], ['timestamp', 1], ['total_elapsed_time',	1],	['total_timer_time', 1],['total_strokes',	1]]),
+                      gen([['Data', 0, 'length'], ['timestamp', endTimeFit, 's'], ['start_time', lastStartTimeFit, 's'], ['total_elapsed_time',  endTimeFit - lastStartTimeFit, 's'], ['total_timer_time', endTimeFit - lastStartTimeFit, 's'], ['total_strokes', lastCircleStrokes,	'strokes']]),
                     )
-                }
-
-                if (timeGo > 0 && stokes > 0) {
+                } else {
+                    // 其它的都取平均值
                     lengthList.push(
-                      gen([['Data', 0, 'length'], ['start_time', timeFitPrev, 's'], ['timestamp', timeFit, 's'], ['total_elapsed_time',  timeGo, 's'], ['total_timer_time',  timeGo, 's'], ['total_strokes', stokes,	'strokes']]),
+                      gen([['Data', 0, 'length'], ['timestamp', lastStartTimeFit + avgElapsedTimeFit, 's'], ['start_time', lastStartTimeFit, 's'], ['total_elapsed_time',  avgElapsedTimeFit, 's'], ['total_timer_time', avgElapsedTimeFit, 's'], ['total_strokes', avgStrokes,	'strokes']]),
                     )
-                    stokesInfo = [index, timeFit];
+                    lastStartTimeFit = lastStartTimeFit + avgElapsedTimeFit;
                 }
-            })
+            }
         }
+
+        // if (sportType === 5 && simplifyValue._source === 'xiaomi') {
+        //     lengthList.push(
+        //       gen([['Definition', 0, 'length'], ['timestamp', 1], ['start_time', 1], ['total_elapsed_time',	1],	['total_timer_time', 1],['total_strokes',	1]]),
+        //       gen([['Data', 0, 'length'], ['timestamp', endTimeFit, 's'], ['start_time', startTimeFit, 's'], ['total_elapsed_time',  endTimeFit - startTimeFit, 's'], ['total_timer_time',  endTimeFit - startTimeFit, 's'], ['total_strokes', simplifyValue.stroke_count,	'strokes']]),
+        //     )
+        // }
 
         if (lengthList.length > 0) {
             infoList.push(...lengthList);
@@ -527,7 +541,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             })
         } else { // 无配速信息则全程数据作为一圈
             const lengKeyList = ['total_strokes', 1];
-            const lengValueList = ['total_strokes', total_stokes, 'strokes'];
+            const lengValueList = ['total_strokes', simplifyValue.stroke_count, 'strokes'];
             infoList.push(
               gen([
                   ['Definition', 0, 'lap'],
@@ -570,6 +584,14 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             )
         }
 
+        let poolLengthKeyList = [];
+        let poolLengthValueList = [];
+
+        if (sportType === 5 && simplifyValue._source === 'xiaomi') {
+            poolLengthKeyList = ['pool_length', 1];
+            poolLengthValueList = ['pool_length', simplifyValue.pool_width, 'm'];
+        }
+
         infoList.push(
           gen([
               ['Definition', 0, 'session'],
@@ -592,6 +614,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['max_altitude', 1],
               ['min_altitude', 1],
               ['avg_altitude', 1],
+              poolLengthKeyList,
           ]),
           gen([
               ['Data', 0, 'session'],
@@ -614,6 +637,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['max_altitude', altitudeSummary.max, 'm'],
               ['min_altitude', altitudeSummary.min, 'm'],
               ['avg_altitude', altitudeSummary.avg, 'm'],
+              poolLengthValueList,
           ]),
         )
 
