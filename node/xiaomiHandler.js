@@ -133,6 +133,12 @@ function combineSportInfo(sport) {
         avgPace: 0,
         distance: Value.distance,
         calories: Value.total_cal || Value.calories, // 总热量 || 运动热量
+        pool_width: Value.pool_width, // 游泳池单趟长度
+        turn_count: Value.turn_count, // 游泳池游的趟数
+        stroke_count: Value.stroke_count, // 划水总次数
+        max_stroke_freq: Value.max_stroke_freq, // 最大划水频率
+        best_swolf: Value.best_swolf,
+        avg_swolf: Value.avg_swolf,
     };
 }
 
@@ -248,6 +254,13 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         avgHeartRate: avgHeartRate || heartRateSummary.avg, // 优先使用数据自带的
         maxHeartRate: maxHeartRate || heartRateSummary.max,
         sportType: sportType2HuaweiMap[sportType] || sportType2HuaweiMap[1],
+        _source: 'xiaomi',
+        pool_width: sportInfo.pool_width,
+        turn_count: sportInfo.turn_count,
+        stroke_count: sportInfo.stroke_count,
+        max_stroke_freq: sportInfo.max_stroke_freq,
+        best_swolf: sportInfo.best_swolf,
+        avg_swolf: sportInfo.avg_swolf,
     }
 
     mkdirsSync(path.join(baseDir, 'json'));

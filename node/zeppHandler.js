@@ -234,6 +234,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         avgHeartRate: heartRateSummary.avg,
         maxHeartRate: heartRateSummary.max,
         sportType: sportType2HuaweiMap[sportType] || sportType2HuaweiMap[1],
+        _source: 'zepp',
     }
 
     mkdirsSync(path.join(baseDir, 'json'));
