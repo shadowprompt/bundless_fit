@@ -11,10 +11,7 @@ const MINUTE_OFFSET = 6000; // 分钟误差（毫秒）
 // 映射成跟huawei统一的，方便统一处理
 const sportType2HuaweiMap = {
     1: 258, // 'Running',
-    6: 257, // 'Walking',
-    8: 264, // 'Running', // 室内跑步（跑步机）
-    9: 259, // 'Biking',
-    16: 279, // 'MultiSport', // 自由活动
+    9: 262, // 'Swimming',
 };
 
 function getRefInfo(ref) {
@@ -90,6 +87,7 @@ function startStopMatch(_startTs, _stopTs, startTs, endTs) {
 const resultValueMap = {
     steps: ['stepMap', 'steps'],
     heart_rate: ['heartRateMap', 'bpm'],
+    calories: ['calorieMap', 'calories'],
 }
 function setData(key, collection, Value, sportStartTime, Sid) {
     const [resultProp, valueProp] = resultValueMap[key] || [];
@@ -134,7 +132,7 @@ function combineSportInfo(sport) {
         avgHeartRate: Value.avg_hrm,
         avgPace: 0,
         distance: Value.distance,
-        calories: Value.calories,
+        calories: Value.total_cal || Value.calories, // 总热量 || 运动热量
     };
 }
 
