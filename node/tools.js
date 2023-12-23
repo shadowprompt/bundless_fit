@@ -358,6 +358,39 @@ function makeFIT(basePath, jsonFileName, totalLength) {
           gen([['Data', 0, 'event'], ['timestamp', endTimeFit, 's'], ['event', 0], ['event_type', 4], ['event_group', 0]]), // 结束
         )
 
+        const lengthList = [];
+        let total_stokes = 0;
+
+        if (sportType === 5) {
+            let stokesInfo = [0, startTimeFit];
+            trackList.forEach((item, index, list) => {
+                const timeTs = new Date(item.Time).getTime();
+                const timeFit = parseInt((timeTs - FIT_EPOCH_MS) / 1000);
+
+                const [indexPrev, timeFitPrev] = stokesInfo;
+                const timeGo = timeFit - timeFitPrev;
+                const stokes = item.Cadence || 0;
+                total_stokes = total_stokes + stokes;
+
+                if (index === 0) {
+                    lengthList.push(
+                      gen([['Definition', 0, 'length'], ['start_time', 1], ['timestamp', 1], ['total_elapsed_time',	1],	['total_timer_time', 1],['total_strokes',	1]]),
+                    )
+                }
+
+                if (timeGo > 0 && stokes > 0) {
+                    lengthList.push(
+                      gen([['Data', 0, 'length'], ['start_time', timeFitPrev, 's'], ['timestamp', timeFit, 's'], ['total_elapsed_time',  timeGo, 's'], ['total_timer_time',  timeGo, 's'], ['total_strokes', stokes,	'strokes']]),
+                    )
+                    stokesInfo = [index, timeFit];
+                }
+            })
+        }
+
+        if (lengthList.length > 0) {
+            infoList.push(...lengthList);
+        }
+
         const paceMap = simplifyValue.paceMap || {};
         // 计圈信息
         const lapList = [];
@@ -493,6 +526,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                 infoList.push(gen(list));
             })
         } else { // 无配速信息则全程数据作为一圈
+            const lengKeyList = ['total_strokes', 1];
+            const lengValueList = ['total_strokes', total_stokes, 'strokes'];
             infoList.push(
               gen([
                   ['Definition', 0, 'lap'],
@@ -509,6 +544,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['max_heart_rate', 1],
                   ['min_heart_rate', 1],
                   ['avg_heart_rate', 1],
+                  ['first_length_index', 1],
+                  ['num_lengths', 1],
+                  lengKeyList,
               ]),
               gen([
                   ['Data', 0, 'lap'],
@@ -525,6 +563,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'],
                   ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'],
                   ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'],
+                  ['first_length_index', 0],
+                  ['num_lengths', Math.max(lengthList.length - 1, 0)],
+                  lengValueList,
               ])
             )
         }
