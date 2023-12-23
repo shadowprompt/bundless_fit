@@ -42,6 +42,7 @@ const sportTypeFitMap = {
     257: [11, 0], // 步行
     281: [11, 0], // 室内步行
     283: [10, 26], // 跳绳->有氧训练
+    273: [4, 15], // 椭圆机
     274: [15, 14], // 划船机
     279: [18, 0], // 综合运动
     // 综合运动 [18, 0]
@@ -738,14 +739,17 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 }
 
 function recordToWeb(recordInfo) {
-    return console.log('recordToWeb ~ ', recordInfo);
-    axios.post('https://gateway.daozhao.com/convert/record', {
-        list: [recordInfo],
-    }).then(() => {
-        dLog('log record', 'success', recordInfo.fileName);
-    }).catch(err => {
-        dLog('warn', 'log record', 'fail', recordInfo.fileName);
-    });
+    console.log('recordToWeb ~ ', recordInfo);
+    // 未填写address可视为调试，不更新记录
+    if (recordInfo.address) {
+        axios.post('https://gateway.daozhao.com/convert/record', {
+            list: [recordInfo],
+        }).then(() => {
+            dLog('log record', 'success', recordInfo.fileName);
+        }).catch(err => {
+            dLog('warn', 'log record', 'fail', recordInfo.fileName);
+        });
+    }
 }
 
 function record(recordInfo = {}, loc) {
