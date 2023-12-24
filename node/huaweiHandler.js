@@ -117,7 +117,7 @@ async function collectData(motion, baseDir) {
     detailValueList.forEach(item => {
         const data = getItemData(item);
         //
-        if (['lbs', 'h-r', 's-r', 'pad', 'cad', 'rs'].includes(data.tp)) {
+        if (['lbs', 'h-r', 's-r', 'pad', 'cad', 'rs', 'alti'].includes(data.tp)) {
             const { ts, isoTime } = calcDateFlag(data, startTimeTs);
             // 将记录的第一个时间戳作为startTimeTs
             if (startTimeTs === 0) {
@@ -148,20 +148,20 @@ async function collectData(motion, baseDir) {
                     // 大陆的坐标则需要偏移
                     positionType: positionType, // 增加一个type标记当前坐标系，方便后续转换
                 }
-                targetTrack.AltitudeMeters = data.alt;
+                targetTrack.AltitudeMeters = data.alt; // 海拔
                 targetTrack._pointIndex = data.k; // 轨迹点数
-            } else if(data.tp === 'h-r') {
+            } else if(data.tp === 'h-r') { // 心率
                 targetTrack.HeartRateBpm = {
                     $: {
                         'xsi:type': 'HeartRateInBeatsPerMinute_t'
                     },
                     Value: data.v,
                 }
-            } else if(data.tp === 's-r') { // 跑步 使用rpm单位时，需要换算：除以2
+            } else if(data.tp === 's-r') { // 跑步步频 使用rpm单位时，需要换算：除以2
                 targetTrack.Cadence = parseInt(data.v / 2);
-            } else if(data.tp === 'pad') { // 划船机
+            } else if(data.tp === 'pad') { // 划船机"步频"
                 targetTrack.Cadence = data.v;
-            } else if(data.tp === 'cad') { // 椭圆机
+            } else if(data.tp === 'cad') { // 椭圆机"步频"
                 targetTrack.Cadence = data.v;
             } else if(data.tp === 'rs') { // 配速
                 targetTrack.Extensions = {
@@ -171,6 +171,8 @@ async function collectData(motion, baseDir) {
                     }
                 }
                 targetTrack._speed = data.v; // 非TCX标准属性，仅为了取值方便
+            } else if(data.tp === 'alti') { // 海拔，如果前面有海拔信息，以此处为准
+                targetTrack.AltitudeMeters = data.v;
             }
         }
     })
