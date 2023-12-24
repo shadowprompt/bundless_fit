@@ -1,5 +1,5 @@
 // 从网上找到的零星数据，可能不全
-export const getTcxSportType = (value) => {
+function getTcxSportType(value) {
   const resultMap = {
     default: 'Running', // 默认户外跑步
     257: 'Walking', // 户外步行
@@ -18,9 +18,9 @@ export const getTcxSportType = (value) => {
     129: 'Badminton', // 羽毛球
   };
   return resultMap[value] || resultMap['default'];
-};
+}
 
-export const getFitSportType = (value) => {
+function getFitSportType(value) {
   const resultMap = {
     default: [1, 0], // 默认户外跑步
     258: [1, 0], // 户外跑步
@@ -38,10 +38,10 @@ export const getFitSportType = (value) => {
     // 综合运动 [18, 0]
   };
   return resultMap[value] || resultMap['default'];
-};
+}
 
 // zepp映射成跟huawei统一的，方便统一处理
-export const getZeppSportType = (value) => {
+function getZeppSportType(value) {
   const resultMap = {
     default: 258, // 默认Running
     1: 258, // 'Running',
@@ -51,10 +51,10 @@ export const getZeppSportType = (value) => {
     16: 279, // 'MultiSport', // 自由活动
   };
   return resultMap[value] || resultMap['default'];
-};
+}
 
 // xiaomi映射成跟huawei统一的，方便统一处理
-export const getXiaomiSportType = (value) => {
+function getXiaomiSportType(value) {
   const resultMap = {
   default: 258, // 默认Running
     1: 258, // 'Running',
@@ -63,3 +63,9 @@ export const getXiaomiSportType = (value) => {
   return resultMap[value] || resultMap['default'];
 }
 
+module.exports = {
+  getTcxSportType,
+  getFitSportType,
+  getZeppSportType,
+  getXiaomiSportType,
+}

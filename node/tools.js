@@ -707,8 +707,8 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 
 function recordToWeb(recordInfo) {
     console.log('recordToWeb ~ ', recordInfo);
-    // 未填写address可视为调试，不更新记录
-    if (recordInfo.address) {
+    // address为test可视为调试，不更新记录
+    if ('test' === recordInfo.address) {
         axios.post('https://gateway.daozhao.com/convert/record', {
             list: [recordInfo],
         }).then(() => {
