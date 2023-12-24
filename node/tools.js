@@ -9,44 +9,11 @@ const localStorage = nodeStore('../localStorage/bundless_fit');
 
 const gpsTransformer = require('./gpsTransformer');
 const {makeZip, sendMail} = require("./mail");
+const {getTcxSportType, getFitSportType} = require("./config");
 
 const FIT_EPOCH_MS = 631065600000; // fit格式时间与标准时间戳的差值
 
 let fileCreatedCount = 0;
-
-// 从网上找到的零星数据，可能不全
-const sportTypeTcxMap = {
-    257: 'Walking', // 户外步行
-    258: 'Running', // 户外跑步
-    259: 'Biking', // 骑自行车
-    262: 'Swimming', // 游泳
-    264: 'Running', // Treadmill 室内跑步（跑步机）
-    265: 'IndoorBike', // 室内骑自行车
-    // 273: 'CrossTrainer ', // 椭圆机
-    274: 'RowMachine', // 划船机
-    // 290: 'Rower', // 划船机划水模式
-    // 291: 'Rowerstrength', // 划船机力量模式
-    279: 'MultiSport', // 综合运动 不好归类的都在此类
-    281: 'Walking', // 室内步行
-    283: 'RopeSkipping', // 跳绳
-    129: 'Badminton', // 羽毛球
-};
-
-const sportTypeFitMap = {
-    258: [1, 0], // 户外跑步
-    264: [1, 1], // 室内跑步机
-    259: [2, 0], // 户外骑自行车
-    262: [5, 17], // 游泳
-    265: [2, 6], // 室内骑自行车
-    129: [0, 0], // 羽毛球 -> 通用
-    257: [11, 0], // 步行
-    281: [11, 0], // 室内步行
-    283: [10, 26], // 跳绳->有氧训练
-    273: [4, 15], // 椭圆机
-    274: [15, 14], // 划船机
-    279: [18, 0], // 综合运动
-    // 综合运动 [18, 0]
-};
 // 任务锁
 const LOCK_FILE_PATH = path.join(__dirname, './job.lock');
 
@@ -139,7 +106,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
 
         const utcTime = trackList[0].Time;
         // 兜底generic
-        const sportTypeStr = sportTypeTcxMap[simplifyValue.sportType] || sportTypeTcxMap[259];
+        const sportTypeStr = getTcxSportType(simplifyValue.sportType);
 
         const obj = {
             'TrainingCenterDatabase': {
@@ -249,7 +216,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         const altitudeList = trackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
         const altitudeSummary = getSummaryFromList(altitudeList);
         // 兜底generic
-        const [sportType, subSportType] = sportTypeFitMap[simplifyValue.sportType] || [18, 0];
+        const [sportType, subSportType] = getFitSportType(simplifyValue.sportType);
 
 
         const fieldList = ['Field', 'Value', 'Units'];

@@ -6,16 +6,9 @@ const extract = require('extract-zip')
 const { dLog } = require('@daozhao/utils');
 
 const { mkdirsSync, pack} = require('./tools');
+const { getZeppSportType } = require('./config');
 
 const MINUTE_OFFSET = 6000; // 分钟误差（毫秒）
-// 映射成跟huawei统一的，方便统一处理
-const sportType2HuaweiMap = {
-    1: 258, // 'Running',
-    6: 257, // 'Walking',
-    8: 264, // 'Running', // 室内跑步（跑步机）
-    9: 259, // 'Biking',
-    16: 279, // 'MultiSport', // 自由活动
-};
 
 function getRefInfo(ref) {
     const [startCellName, endCellName] = ref.split(':');
@@ -233,7 +226,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         totalCalories: calories * 1000,
         avgHeartRate: heartRateSummary.avg,
         maxHeartRate: heartRateSummary.max,
-        sportType: sportType2HuaweiMap[sportType] || sportType2HuaweiMap[1],
+        sportType: getZeppSportType(sportType),
         _source: 'zepp',
     }
 

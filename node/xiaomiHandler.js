@@ -6,13 +6,9 @@ const extract = require('extract-zip')
 const { dLog } = require('@daozhao/utils');
 
 const { mkdirsSync, pack} = require('./tools');
+const { getXiaomiSportType } = require('./config');
 
 const MINUTE_OFFSET = 6000; // 分钟误差（毫秒）
-// 映射成跟huawei统一的，方便统一处理
-const sportType2HuaweiMap = {
-    1: 258, // 'Running',
-    9: 262, // 'Swimming',
-};
 
 function getRefInfo(ref) {
     const [startCellName, endCellName] = ref.split(':');
@@ -253,7 +249,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         totalCalories: calories * 1000,
         avgHeartRate: avgHeartRate || heartRateSummary.avg, // 优先使用数据自带的
         maxHeartRate: maxHeartRate || heartRateSummary.max,
-        sportType: sportType2HuaweiMap[sportType] || sportType2HuaweiMap[1],
+        sportType: getXiaomiSportType(sportType),
         _source: 'xiaomi',
         pool_width: sportInfo.pool_width,
         turn_count: sportInfo.turn_count,
