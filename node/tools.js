@@ -706,7 +706,7 @@ function recordToLocalStorage(recordInfo = {}, loc) {
 }
 
 function recordToWeb(recordInfo) {
-    const isTest = recordInfo.address && recordInfo.address !=='test';
+    const isTest = recordInfo.address && recordInfo.address ==='test';
     console.log('recordToWeb ~ ', recordInfo , 'isTest=',isTest);
     // address为test可视为调试，不更新记录
     if (!isTest) {
