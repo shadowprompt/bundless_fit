@@ -22,13 +22,13 @@ function getTcxSportType(value) {
 
 function getFitSportType(value) {
   const resultMap = {
-    default: [1, 0], // 默认户外跑步
+    default: [18, 0], // 默认综合运动
     258: [1, 0], // 户外跑步
     264: [1, 1], // 室内跑步机
     259: [2, 0], // 户外骑自行车
     262: [5, 17], // 游泳
     265: [2, 6], // 室内骑自行车
-    129: [0, 0], // 羽毛球 -> 通用
+    // 129: [0, 0], // 羽毛球 -> 通用
     257: [11, 0], // 步行
     281: [11, 0], // 室内步行
     283: [10, 26], // 跳绳->有氧训练
@@ -43,7 +43,7 @@ function getFitSportType(value) {
 // zepp映射成跟huawei统一的，方便统一处理
 function getZeppSportType(value) {
   const resultMap = {
-    default: 258, // 默认Running
+    default: 279, // 默认MultiSport
     1: 258, // 'Running',
     6: 257, // 'Walking',
     8: 264, // 'Running', // 室内跑步（跑步机）
@@ -54,11 +54,29 @@ function getZeppSportType(value) {
 }
 
 // xiaomi映射成跟huawei统一的，方便统一处理
-function getXiaomiSportType(value) {
+function getXiaomiSportType(sportType, protoType) {
+  const value = `_${sportType}_${protoType}`;
   const resultMap = {
-  default: 258, // 默认Running
-    1: 258, // 'Running',
-    9: 262, // 'Swimming',
+    default: 279, // 默认MultiSport
+    _1_1: 258, // 'outdoor_running',
+    _2_2: 257, // 'outdoor_walking',
+    _3_3: 264, // 'indoor_running',
+    // _4_4: 258, // 'climbing',
+    // _5_5: 258, // 'cross_hiking',
+    // _8_8: 258, // 'free_training',
+    _9_9: 262, // 'Swimming',
+    // _14_14: 283, // 'rop_skipping',
+    // _16_16: 258, // 'high_interval_training',
+    // _608_8: 129, // 'badminton',
+    // _300_8: 258, // 'climbing_machine',
+    // _303_8: 258, // 'core_training',
+    // _307_8: 258, // 'strength',
+    // _308_8: 258, // 'strength_training',
+    // _312_8: 258, // 'lower_limb_training',
+    // _313_8: 258, // 'dumbbell_training',
+    // _319_8: 258, // 'functional_training',
+    // _322_8: 258, // 'waist_training',
+    // _406_8: 258, // 'jazz',
   };
   return resultMap[value] || resultMap['default'];
 }
