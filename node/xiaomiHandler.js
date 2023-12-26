@@ -105,7 +105,6 @@ function setData(key, collection, Value, sportStartTime, Sid) {
 
 function combineSportInfo(sport) {
     let [Uid, Sid, Key, Time, Category, Value, ...rest] = sport;
-    const sportType = Value.sport_type;
     const sportStartTime = Value.start_time * 1000;
     const sportTime = Value.duration;
 
@@ -116,7 +115,8 @@ function combineSportInfo(sport) {
     const endTs = startTs + sportTime*1000;
 
     return {
-        sportType,
+        sportType: Value.sport_type,
+        protoType: Value.proto_type,
         startDate,
         startTs,
         endTs,
@@ -177,7 +177,11 @@ function getSummaryFromList(list) {
 
 function collectData(sportInfo, baseDir, detailJsonObj) {
     const { heartRateMap, stepMap, activityStageMap = {} } = detailJsonObj;
-    let { sportType, startDate, startTs, endTs, sportStartTime, sportTime, maxPace, minPace, avgPace, maxHeartRate, avgHeartRate, distance, calories } = sportInfo;
+    // 没有则直接无视本次收集
+    if (!heartRateMap || !stepMap) {
+        return;
+    }
+    let { sportType, protoType, startDate, startTs, endTs, sportStartTime, sportTime, maxPace, minPace, avgPace, maxHeartRate, avgHeartRate, distance, calories } = sportInfo;
 
     const {year, month, day, hours, minutes, seconds} = getDateTime(sportStartTime);
     const date = `${year}-${month}-${day}`;
@@ -231,7 +235,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
             hasData = true;
             trackpoint.Cadence = parseInt(targetStepList[0][1] / 2);
         }
-        dLog(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
+        // dLog(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
 
         if (hasData) {
             return trackpoint;
@@ -249,7 +253,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         totalCalories: calories * 1000,
         avgHeartRate: avgHeartRate || heartRateSummary.avg, // 优先使用数据自带的
         maxHeartRate: maxHeartRate || heartRateSummary.max,
-        sportType: getXiaomiSportType(sportType),
+        sportType: getXiaomiSportType(sportType, protoType),
         _source: 'xiaomi',
         pool_width: sportInfo.pool_width,
         turn_count: sportInfo.turn_count,
@@ -306,6 +310,14 @@ async function preCheck(filePath) {
     }
 }
 
+const list = [
+    '2000-01-01 00:00:00',
+    '2019-05-28 00:00:00',
+    '2022-05-27 00:00:00',
+    '2022-11-17 00:00:00',
+    '2023-06-03 00:00:00',
+    '2023-12-26 00:00:00',
+];
 async function generate(dirs, info) {
     const [baseDir, SPORT_FILE, FITNESS_FILE] = dirs;
 
@@ -335,7 +347,13 @@ async function generate(dirs, info) {
             // 遍历sport
             const sport = getValue(sportSheetList.map(item => item + '' + keyNumber), sportFirstSheet);
             const sportInfo = combineSportInfo(sport);
-            iterator(sportInfo);
+            const sportStartTimeTs = new Date(sportInfo.sportStartTime);
+            const index = 4;
+            let startTs = new Date(list[index]).getTime();
+            let endTs = new Date(list[index + 1]).getTime();
+            if (sportStartTimeTs <= endTs && sportStartTimeTs >= startTs) {
+                iterator(sportInfo);
+            }
         }
     }
     // fitness详情
@@ -354,11 +372,14 @@ async function generate(dirs, info) {
         // 收集各sport期间的具体信息（心率、步数等）
         collectDetailMap(sportInfo, worksheetInfoHeartRateAuto, collection);
     })
+    dLog('sportIterator 1st completed');
+
     // 第二次迭代收集具体数据
     sportIterator((sportInfo) => {
         // 聚合各sport期间的具体信息（心率、步数等）
         collectData(sportInfo, baseDir, collection);
     })
+    dLog('sportIterator 2st completed');
     // 数据已收集完毕再次执行generate
     generate(dirs, info);
 }

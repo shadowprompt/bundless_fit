@@ -35,7 +35,6 @@ function getFitSportType(value) {
     273: [4, 15], // 椭圆机
     274: [15, 14], // 划船机
     279: [18, 0], // 综合运动
-    // 综合运动 [18, 0]
   };
   return resultMap[value] || resultMap['default'];
 }
@@ -44,10 +43,10 @@ function getFitSportType(value) {
 function getZeppSportType(value) {
   const resultMap = {
     default: 279, // 默认MultiSport
-    1: 258, // 'Running',
+    1: 258, // 'Running', // 户外跑步
     6: 257, // 'Walking',
     8: 264, // 'Running', // 室内跑步（跑步机）
-    9: 259, // 'Biking',
+    9: 259, // 'Biking', // 户外骑自行车
     16: 279, // 'MultiSport', // 自由活动
   };
   return resultMap[value] || resultMap['default'];
@@ -62,7 +61,7 @@ function getXiaomiSportType(sportType, protoType) {
     _2_2: 257, // 'outdoor_walking',
     _3_3: 264, // 'indoor_running',
     // _4_4: 258, // 'climbing',
-    // _5_5: 258, // 'cross_hiking',
+    _5_5: 257, // 'cross_hiking', // 越野徒步->户外步行
     // _8_8: 258, // 'free_training',
     _9_9: 262, // 'Swimming',
     // _14_14: 283, // 'rop_skipping',
