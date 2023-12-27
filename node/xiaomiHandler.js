@@ -54,16 +54,17 @@ function getDateTime(s) {
 
 /**
  * 根据开始时间和持续时间计算出对应的秒区间
- * @param startTime
+ * @param startTs
  * @param durableSeconds
+ * @param endTs
  * @returns {*[]}
  */
-function splitToSeconds(startTime, durableSeconds) {
-    const DIMENSION = 1000; // 1分钟的毫秒数
-    // 换成整分钟数，不足的加满为1分钟
-    let endTime = startTime + durableSeconds * 1000;
+function splitToSeconds(startTs, durableSeconds, endTs) {
+    const DIMENSION = 1000; // 1秒钟的毫秒数
+    // 换成整秒数，不足的加满为1秒
+    let endTime = endTs ? endTs : startTs + durableSeconds * 1000;
     endTime = endTime % DIMENSION === 0 ? endTime : (parseInt(endTime/DIMENSION) * DIMENSION + DIMENSION);
-    startTime = startTime % DIMENSION === 0 ? startTime : (parseInt(startTime/DIMENSION) * DIMENSION + DIMENSION);
+    let startTime = startTs % DIMENSION === 0 ? startTs : (parseInt(startTs/DIMENSION) * DIMENSION + DIMENSION);
     const result = [];
     while (endTime - startTime >= 0) {
         result.push(startTime);
@@ -106,20 +107,18 @@ function setData(key, collection, Value, sportStartTime, Sid) {
 function combineSportInfo(sport) {
     let [Uid, Sid, Key, Time, Category, Value, ...rest] = sport;
     const sportStartTime = Value.start_time * 1000;
+    const sportEndTime = Value.end_time * 1000;
     const sportTime = Value.duration;
 
     const {year, month, day} = getDateTime(sportStartTime);
     const startDate =`${year}-${month}-${day}`;
 
-    const startTs = new Date(sportStartTime).getTime();
-    const endTs = startTs + sportTime*1000;
-
     return {
         sportType: Value.sport_type,
         protoType: Value.proto_type,
         startDate,
-        startTs,
-        endTs,
+        startTs: sportStartTime,
+        endTs: sportEndTime,
         sportStartTime,
         sportTime,
         maxPace: Value.max_pace,
@@ -190,8 +189,8 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
     const heartRateList = heartRateMap[sportStartTime]?.list || [];
     const stepList = stepMap[sportStartTime]?.list || [];
     const activityStageList = activityStageMap[sportStartTime]?.list || [];
-    // 根据运行开始时间和持续时间，划分成各以一分钟维度的列表
-    const sportMinuteList = splitToSeconds(sportStartTime, sportTime);
+    // 根据运行开始时间和持续时间，划分成各以一秒钟维度的列表
+    const sportMinuteList = splitToSeconds(startTs, sportTime, endTs);
 
     const heartRateSummary = getSummaryFromList(heartRateList);
     const stepSummary = getSummaryFromList(stepList);
@@ -322,11 +321,11 @@ const list = [
 
 // 运动记录太长是需要分段处理
 let sportSplitInfo;
-let sportSplitIndex = 2;
-sportSplitInfo = {
-    startTs: new Date(list[sportSplitIndex]).getTime(),
-    endTs: new Date(list[sportSplitIndex + 1]).getTime(),
-};
+// let sportSplitIndex = 0;
+// sportSplitInfo = {
+//     startTs: new Date(list[sportSplitIndex]).getTime(),
+//     endTs: new Date(list[sportSplitIndex + 1]).getTime(),
+// };
 
 async function generate(dirs, info) {
     const [baseDir, SPORT_FILE, FITNESS_FILE] = dirs;
