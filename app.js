@@ -109,7 +109,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
                   address,
                   type,
                   payment,
-                  paid,
+                  paid: paid * 1,
                   baseFilePath,
                   filePath: targetPath,
                   baseUrl,
