@@ -357,9 +357,12 @@ async function generate(dirs, info) {
             // 遍历sport
             const sport = getValue(sportSheetList.map(item => item + '' + keyNumber), sportFirstSheet);
             const sportInfo = combineSportInfo(sport);
-            // 介于分段时间内才进行遍历
-            if (sportSplitInfo && sportInfo.startTs <= sportSplitInfo.endTs && sportInfo.startTs >= sportSplitInfo.startTs) {
-                iterator(sportInfo);
+            // 数据量过大时采用分段模式
+            if (sportSplitInfo) {
+                // 分段模式 介于分段时间内才进行遍历
+                if (sportInfo.startTs <= sportSplitInfo.endTs && sportInfo.startTs >= sportSplitInfo.startTs) {
+                    iterator(sportInfo);
+                }
             } else {
                 iterator(sportInfo);
             }
