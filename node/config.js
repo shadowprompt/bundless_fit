@@ -55,6 +55,16 @@ function getZeppSportType(value) {
 // xiaomi映射成跟huawei统一的，方便统一处理
 function getXiaomiSportType(sportType, protoType) {
   const value = `_${sportType}_${protoType}`;
+  const sportTypeMap = {
+    default: 279,
+    1: 258,
+    2: 257,
+    3: 264,
+    5: 257,
+    9: 262,
+  }
+  return sportTypeMap[sportType] || sportTypeMap['default'];
+
   const resultMap = {
     default: 279, // 默认MultiSport
     _1_1: 258, // 'outdoor_running',
