@@ -235,14 +235,15 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
             hasData = true;
             trackpoint.Cadence = parseInt(targetStepList[0][1] / 2);
         }
-        // dLog(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
+        dLog(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
 
+        return trackpoint;
         if (hasData) {
             return trackpoint;
         }
     })
     // 仅保留有有效数据的
-    trackList = trackList.filter(item => item);
+    // trackList = trackList.filter(item => item);
 
     const simplifyValue = {
         totalTime: sportTime * 1000,
@@ -318,6 +319,15 @@ const list = [
     '2023-06-03 00:00:00',
     '2023-12-26 00:00:00',
 ];
+
+// 运动记录太长是需要分段处理
+let sportSplitInfo;
+let sportSplitIndex = 2;
+sportSplitInfo = {
+    startTs: new Date(list[sportSplitIndex]).getTime(),
+    endTs: new Date(list[sportSplitIndex + 1]).getTime(),
+};
+
 async function generate(dirs, info) {
     const [baseDir, SPORT_FILE, FITNESS_FILE] = dirs;
 
@@ -347,11 +357,10 @@ async function generate(dirs, info) {
             // 遍历sport
             const sport = getValue(sportSheetList.map(item => item + '' + keyNumber), sportFirstSheet);
             const sportInfo = combineSportInfo(sport);
-            const sportStartTimeTs = new Date(sportInfo.sportStartTime);
-            const index = 4;
-            let startTs = new Date(list[index]).getTime();
-            let endTs = new Date(list[index + 1]).getTime();
-            if (sportStartTimeTs <= endTs && sportStartTimeTs >= startTs) {
+            // 介于分段时间内才进行遍历
+            if (sportSplitInfo && sportInfo.startTs <= sportSplitInfo.endTs && sportInfo.startTs >= sportSplitInfo.startTs) {
+                iterator(sportInfo);
+            } else {
                 iterator(sportInfo);
             }
         }
@@ -372,7 +381,12 @@ async function generate(dirs, info) {
         // 收集各sport期间的具体信息（心率、步数等）
         collectDetailMap(sportInfo, worksheetInfoHeartRateAuto, collection);
     })
-    dLog('sportIterator 1st completed');
+    dLog('sportIterator 1st completed', Object.keys(collection).length);
+
+    if (Object.keys(collection).length === 0) {
+        dLog('warn', 'no data');
+        return;
+    }
 
     // 第二次迭代收集具体数据
     sportIterator((sportInfo) => {

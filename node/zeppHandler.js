@@ -210,12 +210,13 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         }
         dLog(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
 
+        return trackpoint;
         if (hasData) {
             return trackpoint;
         }
     })
     // 仅保留有有效数据的
-    trackList = trackList.filter(item => item);
+    // trackList = trackList.filter(item => item);
 
     const simplifyValue = {
         totalTime: sportTime * 1000,
