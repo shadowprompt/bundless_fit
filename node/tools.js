@@ -99,12 +99,9 @@ function makeTCX(basePath, jsonFileName, totalLength) {
 
         let data = fs.readFileSync(`${basePath}/json/${jsonFileName}`);
         data = JSON.parse(data.toString())
-        const { trackList = [], simplifyValue, address, } = data;
-        if (trackList.length === 0) {
-            return Promise.resolve(0);
-        }
+        const { trackList = [], simplifyValue, address, startTs } = data;
 
-        const utcTime = trackList[0].Time;
+        const utcTime = new Date(startTs).toISOString();
         // 兜底generic
         const sportTypeStr = getTcxSportType(simplifyValue.sportType);
 
@@ -191,12 +188,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 
         let data = fs.readFileSync(`${basePath}/json/${jsonFileName}`);
         data = JSON.parse(data.toString())
-        const { trackList = [], simplifyValue, address } = data;
-        if (trackList.length === 0) {
-            return Promise.resolve(0);
-        }
-        const firstTrack = trackList[0] || {};
-        const startTimeTs = new Date(firstTrack.Time).getTime();
+        const { trackList = [], simplifyValue, address, startTs } = data;
+
+        const startTimeTs = startTs;
         const startTimeFit = parseInt((startTimeTs - FIT_EPOCH_MS) / 1000);
         const totalTimeSeconds = parseInt(simplifyValue.totalTime/ 1000);
         const endTimeFit = parseInt((startTimeTs + simplifyValue.totalTime - FIT_EPOCH_MS) / 1000);
