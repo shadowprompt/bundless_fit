@@ -48,6 +48,7 @@ function getDateTime(s) {
         hours,
         minutes,
         seconds,
+        ts: d.getTime(),
     }
 }
 
@@ -153,7 +154,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
     const { heartRateMap, stepMap, activityStageMap } = detailJsonObj;
     let [sportType, sportStartTime, sportTime, maxPace, minPace, distance, avgPace, calories] = sportInfo;
 
-    const {year, month, day, hours, minutes, seconds} = getDateTime(sportStartTime);
+    const {year, month, day, hours, minutes, seconds, ts} = getDateTime(sportStartTime);
     const date = `${year}-${month}-${day}`;
     const localTime = `${year}-${month}-${day} ${hours}_${minutes}_${seconds}`;
 
@@ -229,6 +230,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         maxHeartRate: heartRateSummary.max,
         sportType: getZeppSportType(sportType),
         _source: 'zepp',
+        startTs: ts,
     }
 
     mkdirsSync(path.join(baseDir, 'json'));

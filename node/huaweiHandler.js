@@ -118,7 +118,7 @@ async function collectData(motion, baseDir) {
         const data = getItemData(item);
         //
         if (['lbs', 'h-r', 's-r', 'pad', 'cad', 'rs', 'alti'].includes(data.tp)) {
-            const { ts, isoTime } = calcDateFlag(data, startTimeTs);
+            const { ts, isoTime } = calcDateFlag(data, motion.startTime);
             // 将记录的第一个时间戳作为startTimeTs
             if (startTimeTs === 0) {
                 startTimeTs = ts;
@@ -179,8 +179,15 @@ async function collectData(motion, baseDir) {
 
     trackList.sort((a, b) => new Date(a.Time) - new Date(b.Time));
 
-    const {year, month, day, hours, minutes, seconds} = getDateTime(startTimeTs);
+    const {year, month, day, hours, minutes, seconds} = getDateTime(motion.startTime);
     const localTime = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+
+    // 对比原来计算错误的
+    if (!startTimeTs) {
+        const {year, month, day, hours, minutes, seconds} = getDateTime(startTimeTs);
+        const localTimeError = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+        console.log('startTimeTs异常 ~ ', localTimeError, localTime, simplifyValue.sportType);
+    }
 
 
     mkdirsSync(path.join(baseDir, `json`))
@@ -188,6 +195,7 @@ async function collectData(motion, baseDir) {
         trackList,
         simplifyValue,
         address,
+        startTs: motion.startTime,
     }, null ,2));
 
     return {

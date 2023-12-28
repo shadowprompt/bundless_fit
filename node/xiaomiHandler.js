@@ -255,6 +255,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         maxHeartRate: maxHeartRate || heartRateSummary.max,
         sportType: getXiaomiSportType(sportType, protoType),
         _source: 'xiaomi',
+        startTs: sportStartTime,
         pool_width: sportInfo.pool_width,
         turn_count: sportInfo.turn_count,
         stroke_count: sportInfo.stroke_count,
