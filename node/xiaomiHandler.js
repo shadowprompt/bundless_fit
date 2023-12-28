@@ -254,8 +254,6 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         avgHeartRate: avgHeartRate || heartRateSummary.avg, // 优先使用数据自带的
         maxHeartRate: maxHeartRate || heartRateSummary.max,
         sportType: getXiaomiSportType(sportType, protoType),
-        _source: 'xiaomi',
-        startTs: sportStartTime,
         pool_width: sportInfo.pool_width,
         turn_count: sportInfo.turn_count,
         stroke_count: sportInfo.stroke_count,
@@ -267,7 +265,9 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
     mkdirsSync(path.join(baseDir, 'json'));
     fs.writeFileSync(path.join(baseDir, `json/${localTime}.json`), JSON.stringify({
         trackList,
-        simplifyValue
+        simplifyValue,
+        _source: 'xiaomi',
+        startTs: sportStartTime,
     }, null, 2));
 }
 

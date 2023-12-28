@@ -195,6 +195,7 @@ async function collectData(motion, baseDir) {
         trackList,
         simplifyValue,
         address,
+        _source: 'huawei',
         startTs: motion.startTime,
     }, null ,2));
 

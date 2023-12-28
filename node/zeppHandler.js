@@ -229,14 +229,14 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         avgHeartRate: heartRateSummary.avg,
         maxHeartRate: heartRateSummary.max,
         sportType: getZeppSportType(sportType),
-        _source: 'zepp',
-        startTs: ts,
     }
 
     mkdirsSync(path.join(baseDir, 'json'));
     fs.writeFileSync(path.join(baseDir, `json/${localTime}.json`), JSON.stringify({
         trackList,
-        simplifyValue
+        simplifyValue,
+        _source: 'zepp',
+        startTs: ts,
     }, null, 2));
 }
 
