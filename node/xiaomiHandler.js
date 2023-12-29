@@ -312,21 +312,19 @@ async function preCheck(filePath) {
 }
 
 const list = [
-    '2000-01-01 00:00:00',
-    '2019-05-28 00:00:00',
-    '2022-05-27 00:00:00',
-    '2022-11-17 00:00:00',
-    '2023-06-03 00:00:00',
-    '2023-12-26 00:00:00',
+    '1000-01-01 00:00:00',
+    '2020-01-15 00:00:00',
+    '2021-09-08 00:00:00',
+    '3000-12-26 00:00:00',
 ];
 
 // 运动记录太长是需要分段处理
 let sportSplitInfo;
-// let sportSplitIndex = 0;
-// sportSplitInfo = {
-//     startTs: new Date(list[sportSplitIndex]).getTime(),
-//     endTs: new Date(list[sportSplitIndex + 1]).getTime(),
-// };
+let sportSplitIndex = 2;
+sportSplitInfo = {
+    startTs: new Date(list[sportSplitIndex]).getTime(),
+    endTs: new Date(list[sportSplitIndex + 1]).getTime(),
+};
 
 async function generate(dirs, info) {
     const [baseDir, SPORT_FILE, FITNESS_FILE] = dirs;

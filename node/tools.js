@@ -188,7 +188,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 
         let data = fs.readFileSync(`${basePath}/json/${jsonFileName}`);
         data = JSON.parse(data.toString())
-        const { trackList = [], simplifyValue, address, startTs } = data;
+        const { trackList = [], simplifyValue, address, _source, startTs } = data;
 
         const startTimeTs = startTs;
         const startTimeFit = parseInt((startTimeTs - FIT_EPOCH_MS) / 1000);
@@ -322,7 +322,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 
         const lengthList = [];
 
-        if (sportType === 5 && simplifyValue._source === 'xiaomi') {
+        if (sportType === 5 && _source === 'xiaomi') {
             const _avgCircleCount = simplifyValue.totalDistance/simplifyValue.pool_width;
             const avgCircleCount = Math.ceil(_avgCircleCount);
             // 平均每个circle的strokes
@@ -356,7 +356,67 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             }
         }
 
-        // if (sportType === 5 && simplifyValue._source === 'xiaomi') {
+        if (simplifyValue.sportType === 283) {
+            infoList.push(
+              gen([
+                  ['Definition', 0, 'field_description'],
+                  ['field_name', 64, ''],
+                  ['units', 16, ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'jump_mode', ''],
+                  ['units', 'mode', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'total_time', ''],
+                  ['units', 'mm:ss', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'active_time', ''],
+                  ['units', 'mm:ss', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'reps', ''],
+                  ['units', 'reps', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'round', ''],
+                  ['units', 'round', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'average_reps', ''],
+                  ['units', 'reps', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'Max_streaks', ''],
+                  ['units', 'times', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'max_jump_rate', ''],
+                  ['units', 'jpm', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'total_calories', ''],
+                  ['units', 'kcal', ''],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'app_version', ''],
+                  ['units', 'ver', ''],
+              ]),
+            )
+        }
+
+        // if (sportType === 5 && _source === 'xiaomi') {
         //     lengthList.push(
         //       gen([['Definition', 0, 'length'], ['timestamp', 1], ['start_time', 1], ['total_elapsed_time',	1],	['total_timer_time', 1],['total_strokes',	1]]),
         //       gen([['Data', 0, 'length'], ['timestamp', endTimeFit, 's'], ['start_time', startTimeFit, 's'], ['total_elapsed_time',  endTimeFit - startTimeFit, 's'], ['total_timer_time',  endTimeFit - startTimeFit, 's'], ['total_strokes', simplifyValue.stroke_count,	'strokes']]),
@@ -455,7 +515,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                     list.push(
                       ['max_cadence', lapCadenceSummary.max, 'rpm'],
                       ['avg_cadence', lapCadenceSummary.avg, 'rpm'],
-                      ['avg_step_length', stepLengthAvg, 'mm'],
+                      ['avg_step_length', 1, 'mm'],
                     );
                 }
                 // 可能有的 心率信息
@@ -503,7 +563,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             })
         } else { // 无配速信息则全程数据作为一圈
             const lengKeyList = ['total_strokes', 1];
-            const lengValueList = ['total_strokes', simplifyValue.stroke_count, 'strokes'];
+            const lengValueList = ['total_strokes', simplifyValue.stroke_count || 1, 'strokes'];
             infoList.push(
               gen([
                   ['Definition', 0, 'lap'],
@@ -535,7 +595,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'],
                   ['max_cadence', cadenceSummary.max, 'rpm'],
                   ['avg_cadence', cadenceSummary.avg, 'rpm'],
-                  ['avg_step_length', stepLengthAvg, 'mm'],
+                  ['avg_step_length', 1, 'mm'],
                   ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'],
                   ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'],
                   ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'],
@@ -549,9 +609,40 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         let poolLengthKeyList = [];
         let poolLengthValueList = [];
 
-        if (sportType === 5 && simplifyValue._source === 'xiaomi') {
+        if (sportType === 5 && _source === 'xiaomi') {
             poolLengthKeyList = ['pool_length', 1];
             poolLengthValueList = ['pool_length', simplifyValue.pool_width, 'm'];
+        }
+
+        let jumpKeyList = [];
+        let jumpValueList = [];
+
+        if (simplifyValue.sportType === 283) {
+            const data = simplifyValue.mExtendTrackDataMap || {};
+            jumpKeyList = [
+                ['jump_mode', 1],
+                ['total_time', 1],
+                ['active_time', 1],
+                ['reps', 1],
+                ['rounds', 1],
+                ['average_reps', 1],
+                ['Max_streaks', 1],
+                ['max_jump_rate', 1],
+                ['total_calories', 1],
+                ['app_version', 1],
+            ];
+            jumpValueList = [
+                ['jump_mode', 'Free'],
+                ['total_time', '03:23', 'mm:ss'],
+                ['active_time', '2:23', 'mm:ss'],
+                ['reps', data.skipNum, 'reps'],
+                ['rounds', data.stumblingRope, 'rounds'],
+                ['average_reps', data.crossTrainerCadence, 'reps'],
+                ['Max_streaks', data.maxSkippingTimes, 'times'],
+                ['max_jump_rate', 1, 'jpm'],
+                ['total_calories', parseInt(simplifyValue.totalCalories/1000), 'kcal'],
+                ['app_version', 1, '1.0.0'],
+            ];
         }
 
         infoList.push(
@@ -577,6 +668,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['min_altitude', 1],
               ['avg_altitude', 1],
               poolLengthKeyList,
+            ...jumpKeyList,
           ]),
           gen([
               ['Data', 0, 'session'],
@@ -596,10 +688,11 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'],
               ['max_speed', speedSummary.max, 'm/s'],
               ['avg_speed', speedSummary.avg, 'm/s'],
-              ['max_altitude', altitudeSummary.max, 'm'],
-              ['min_altitude', altitudeSummary.min, 'm'],
-              ['avg_altitude', altitudeSummary.avg, 'm'],
+              ['max_altitude', 1, 'm'],
+              ['min_altitude', 1, 'm'],
+              ['avg_altitude', 1, 'm'],
               poolLengthValueList,
+              ...jumpValueList,
           ]),
         )
 
