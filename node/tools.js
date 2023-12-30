@@ -206,6 +206,9 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         const speedList = trackList.filter(item => item._speed).map(item => [1, item._speed / 10]);
         const speedSummary = getSummaryFromList(speedList);
         speedSummary.avg = (simplifyValue.totalDistance/totalTimeSeconds).toFixed(3);
+        // 跳绳速度
+        const jumpRateList = trackList.filter(item => item._jumpRate).map(item => [1, item._jumpRate * 1]);
+        const jumpRateSummary = getSummaryFromList(jumpRateList);
         // 高度
         const altitudeList = trackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
         const altitudeSummary = getSummaryFromList(altitudeList);
@@ -265,12 +268,19 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['cadence', item.Cadence, 'rpm']
                 )
             }
-
+            // 速度
             if (item._speed) {
                 eachList.push(
                   ['speed', (item._speed/10).toFixed(3), 'm/s']
                 )
             }
+            // 跳绳速度
+            if (item._jumpRate) {
+                eachList.push(
+                  ['jump_rate', item._jumpRate, 'jpm']
+                )
+            }
+
             return {
                 definition: eachList.map((item, index) => {
                     if (index === 0) {
@@ -293,79 +303,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
           gen([['Data', 0, 'event'], ['timestamp', startTimeFit, 's'], ['event', 0], ['event_type', 0], ['event_group', 0]]), // 开始
         );
 
-        let lastDefinition = [];
-        trackList.forEach((item, index) => {
-            const timeTs = new Date(item.Time).getTime();
-            const timeFit = parseInt((timeTs - FIT_EPOCH_MS) / 1000);
-            if (index === 0) {
-                infoList.push(
-                  gen([['Definition', 0, 'record'], ['timestamp', 1], ['distance', 1], ['activity_type', 1]]),
-                  gen([['Data', 0, 'record'], ['timestamp', timeFit, 's'], ['distance', 0, 'm'], ['activity_type', sportType]]),
-                )
-            }
-
-            const info = getRecord(item, timeFit);
-
-            const currentDefinition = info.definition.map(item => item[0]);
-            if (lastDefinition.join('|') !== currentDefinition.join('|')) {
-                infoList.push(gen(info.definition));
-            }
-            lastDefinition = [...currentDefinition];
-
-            infoList.push(gen(info.data));
-        })
-
-        infoList.push(
-          gen([['Definition', 0, 'event'], ['timestamp', 1], ['event', 1], ['event_type', 1], ['event_group', 1]]),
-          gen([['Data', 0, 'event'], ['timestamp', endTimeFit, 's'], ['event', 0], ['event_type', 4], ['event_group', 0]]), // 结束
-        )
-
-        const lengthList = [];
-
-        if (sportType === 5 && _source === 'xiaomi') {
-            const _avgCircleCount = simplifyValue.totalDistance/simplifyValue.pool_width;
-            const avgCircleCount = Math.ceil(_avgCircleCount);
-            // 平均每个circle的strokes
-            const _avgStrokes = simplifyValue.stroke_count/_avgCircleCount;
-            const avgStrokes = Math.ceil(_avgStrokes);
-            // 最后一个circle的strokes根据区分是否有半圈区分
-            const lastCircleStrokes = avgCircleCount > _avgCircleCount ? simplifyValue.stroke_count - avgStrokes * Math.round(avgCircleCount) : avgStrokes;
-
-            const totalElapsedTimeFit = endTimeFit - startTimeFit;
-            // 平均每个circle的耗时
-            const avgElapsedTimeFit =  Math.round(totalElapsedTimeFit/_avgCircleCount);
-
-            let lastStartTimeFit = startTimeFit;
-            lengthList.push(
-              gen([['Definition', 0, 'length'], ['timestamp', 1], ['start_time', 1], ['total_elapsed_time',	1],	['total_timer_time', 1],['total_strokes',	1]]),
-            )
-
-            for(let i = 1;i<=avgCircleCount;i++) {
-                // 最后一个circle
-                if (i === avgCircleCount) {
-                    lengthList.push(
-                      gen([['Data', 0, 'length'], ['timestamp', endTimeFit, 's'], ['start_time', lastStartTimeFit, 's'], ['total_elapsed_time',  endTimeFit - lastStartTimeFit, 's'], ['total_timer_time', endTimeFit - lastStartTimeFit, 's'], ['total_strokes', lastCircleStrokes,	'strokes']]),
-                    )
-                } else {
-                    // 其它的都取平均值
-                    lengthList.push(
-                      gen([['Data', 0, 'length'], ['timestamp', lastStartTimeFit + avgElapsedTimeFit, 's'], ['start_time', lastStartTimeFit, 's'], ['total_elapsed_time',  avgElapsedTimeFit, 's'], ['total_timer_time', avgElapsedTimeFit, 's'], ['total_strokes', avgStrokes,	'strokes']]),
-                    )
-                    lastStartTimeFit = lastStartTimeFit + avgElapsedTimeFit;
-                }
-            }
-        }
-
-        if (simplifyValue.sportType === 283) {
-            infoList.push(
-              gen([
-                    ['Definition', 0, 'sport'],
-                    ['name', 128],
-                    ['sport', 1],
-                    ['sub_sport', 1],
-                ]
-              )
-            );
+        if (simplifyValue.sportType === 283 && _source === 'huawei') {
             infoList.push(
               gen([
                     ['Data', 0, 'sport'],
@@ -473,6 +411,102 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               )
             );
 
+            infoList.push(
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'jump_rate', ''],
+                  ['units', 'jpm', ''],
+                  ['native_mesg_num', 20],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 8],
+                  ['fit_base_type_id', 132],
+              ]),
+              gen([
+                  ['Data', 0, 'field_description'],
+                  ['field_name', 'session_speed', ''],
+                  ['units', 'jpm', ''],
+                  ['native_mesg_num', 20],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 12],
+                  ['fit_base_type_id', 132],
+              ]),
+            );
+        }
+
+
+        let lastDefinition = [];
+        trackList.forEach((item, index) => {
+            const timeTs = new Date(item.Time).getTime();
+            const timeFit = parseInt((timeTs - FIT_EPOCH_MS) / 1000);
+            if (index === 0) {
+                infoList.push(
+                  gen([['Definition', 0, 'record'], ['timestamp', 1], ['distance', 1], ['activity_type', 1]]),
+                  gen([['Data', 0, 'record'], ['timestamp', timeFit, 's'], ['distance', 0, 'm'], ['activity_type', sportType]]),
+                )
+            }
+
+            const info = getRecord(item, timeFit);
+
+            const currentDefinition = info.definition.map(item => item[0]);
+            if (lastDefinition.join('|') !== currentDefinition.join('|')) {
+                infoList.push(gen(info.definition));
+            }
+            lastDefinition = [...currentDefinition];
+
+            infoList.push(gen(info.data));
+        })
+
+        infoList.push(
+          gen([['Definition', 0, 'event'], ['timestamp', 1], ['event', 1], ['event_type', 1], ['event_group', 1]]),
+          gen([['Data', 0, 'event'], ['timestamp', endTimeFit, 's'], ['event', 0], ['event_type', 4], ['event_group', 0]]), // 结束
+        )
+
+        const lengthList = [];
+
+        if (sportType === 5 && _source === 'xiaomi') {
+            const _avgCircleCount = simplifyValue.totalDistance/simplifyValue.pool_width;
+            const avgCircleCount = Math.ceil(_avgCircleCount);
+            // 平均每个circle的strokes
+            const _avgStrokes = simplifyValue.stroke_count/_avgCircleCount;
+            const avgStrokes = Math.ceil(_avgStrokes);
+            // 最后一个circle的strokes根据区分是否有半圈区分
+            const lastCircleStrokes = avgCircleCount > _avgCircleCount ? simplifyValue.stroke_count - avgStrokes * Math.round(avgCircleCount) : avgStrokes;
+
+            const totalElapsedTimeFit = endTimeFit - startTimeFit;
+            // 平均每个circle的耗时
+            const avgElapsedTimeFit =  Math.round(totalElapsedTimeFit/_avgCircleCount);
+
+            let lastStartTimeFit = startTimeFit;
+            lengthList.push(
+              gen([['Definition', 0, 'length'], ['timestamp', 1], ['start_time', 1], ['total_elapsed_time',	1],	['total_timer_time', 1],['total_strokes',	1]]),
+            )
+
+            for(let i = 1;i<=avgCircleCount;i++) {
+                // 最后一个circle
+                if (i === avgCircleCount) {
+                    lengthList.push(
+                      gen([['Data', 0, 'length'], ['timestamp', endTimeFit, 's'], ['start_time', lastStartTimeFit, 's'], ['total_elapsed_time',  endTimeFit - lastStartTimeFit, 's'], ['total_timer_time', endTimeFit - lastStartTimeFit, 's'], ['total_strokes', lastCircleStrokes,	'strokes']]),
+                    )
+                } else {
+                    // 其它的都取平均值
+                    lengthList.push(
+                      gen([['Data', 0, 'length'], ['timestamp', lastStartTimeFit + avgElapsedTimeFit, 's'], ['start_time', lastStartTimeFit, 's'], ['total_elapsed_time',  avgElapsedTimeFit, 's'], ['total_timer_time', avgElapsedTimeFit, 's'], ['total_strokes', avgStrokes,	'strokes']]),
+                    )
+                    lastStartTimeFit = lastStartTimeFit + avgElapsedTimeFit;
+                }
+            }
+        }
+
+        if (simplifyValue.sportType === 283 && _source === 'huawei') {
+            infoList.push(
+              gen([
+                    ['Definition', 0, 'sport'],
+                    ['name', 128],
+                    ['sport', 1],
+                    ['sub_sport', 1],
+                ]
+              )
+            );
 
             infoList.push(
               gen([
@@ -774,7 +808,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         let jumpKeyList = [];
         let jumpValueList = [];
 
-        if (simplifyValue.sportType === 283) {
+        if (simplifyValue.sportType === 283 && _source === 'huawei') {
             const data = simplifyValue.mExtendTrackDataMap || {};
             jumpKeyList = [
                 ['jump_mode', 1],
@@ -790,13 +824,13 @@ function makeFIT(basePath, jsonFileName, totalLength) {
             ];
             jumpValueList = [
                 ['jump_mode', 'Free'],
-                ['total_time', '03:23', 'mm:ss'],
-                ['active_time', '2:23', 'mm:ss'],
-                ['reps', data.skipNum, 'reps'],
-                ['rounds', data.stumblingRope, 'rounds'],
-                ['average_reps', data.crossTrainerCadence, 'reps'],
-                ['Max_streaks', data.maxSkippingTimes, 'times'],
-                ['max_jump_rate', 1, 'jpm'],
+                ['total_time', formatSeconds(parseInt(simplifyValue.totalTime/1000)), 'mm:ss'], // 总时长
+                ['active_time', formatSeconds(parseInt(simplifyValue.totalTime/1000)), 'mm:ss'], // 跳绳时长
+                ['reps', data.skipNum, 'reps'], // 跳绳总次数
+                ['rounds', data.stumblingRope, 'rounds'], // 跳绳中断次数
+                ['average_reps', data.crossTrainerCadence, 'reps'], // ??
+                ['Max_streaks', data.maxSkippingTimes, 'times'], // 最多连续跳绳次数
+                ['max_jump_rate', jumpRateSummary.max, 'jpm'], // 最大跳绳速度
                 ['total_calories', parseInt(simplifyValue.totalCalories/1000), 'kcal'],
                 ['app_version', 1, '1.0.0'],
             ];
@@ -875,8 +909,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                         dLog('fit success', commonFileName, simplifyValue.sportType, address, `${fileCreatedCount}/${totalLength}`);
                     } else {
                         // 失败
-                        dLog('fit fail', command, fileCreatedCount, error);
-                        dLog(stderr);
+                        dLog('error', 'fit fail', command, fileCreatedCount, error);
+                        dLog('error', stderr);
                     }
                     resolve(command);
                 });
@@ -999,6 +1033,41 @@ function fetchGeoInfo(long, lan) {
     });
 }
 
+function formatSeconds(value) {
+  let theTime = parseInt(value);// 秒
+  let theTime1 = 0;// 分
+  let theTime2 = 0;// 小时
+  if (theTime > 60) {
+    theTime1 = parseInt(theTime / 60);
+    theTime = parseInt(theTime % 60);
+    if (theTime1 > 60) {
+      theTime2 = parseInt(theTime1 / 60);
+      theTime1 = parseInt(theTime1 % 60);
+    }
+  }
+  let result = "" + parseInt(theTime);
+  if(result < 10){
+    result = '0' + result;
+  }
+  if (theTime1 > 0) {
+    result = "" + parseInt(theTime1) + ":" + result;
+    if(theTime1 < 10){
+      result = '0' + result;
+    }
+  }else{
+    result = '00:' + result;
+  }
+  if (theTime2 > 0) {
+    result = "" + parseInt(theTime2) + ":" + result;
+    if(theTime2 < 10){
+      result = '0' + result;
+    }
+  }else{
+    result = '00:' + result;
+  }
+  return result;
+}
+
 module.exports = {
     setLock,
     releaseLock,
@@ -1009,4 +1078,5 @@ module.exports = {
     pack,
     record,
     fetchGeoInfo,
+    formatSeconds,
 }

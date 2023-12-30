@@ -117,7 +117,7 @@ async function collectData(motion, baseDir) {
     detailValueList.forEach(item => {
         const data = getItemData(item);
         //
-        if (['lbs', 'h-r', 's-r', 'pad', 'cad', 'rs', 'alti'].includes(data.tp)) {
+        if (['lbs', 'h-r', 's-r', 'pad', 'cad', 'rs', 'alti', 'scp'].includes(data.tp)) {
             const { ts, isoTime } = calcDateFlag(data, motion.startTime);
             // 将记录的第一个时间戳作为startTimeTs
             if (startTimeTs === 0) {
@@ -171,6 +171,8 @@ async function collectData(motion, baseDir) {
                     }
                 }
                 targetTrack._speed = data.v; // 非TCX标准属性，仅为了取值方便
+            } else if(data.tp === 'scp') { // 跳绳速度
+                targetTrack._jumpRate = data.v; // 非TCX标准属性
             } else if(data.tp === 'alti') { // 海拔，如果前面有海拔信息，以此处为准
                 targetTrack.AltitudeMeters = data.v;
             }
