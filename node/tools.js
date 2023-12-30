@@ -52,10 +52,10 @@ function getSummaryFromList(list) {
     const total =  list.reduce((acc, [, value]) => acc + value * 1, 0);
     const avg = list.length > 0 ? (total / list.length).toFixed(3) : 0;
     return {
-        min,
-        max,
-        total,
-        avg,
+        min: [NaN, Infinity].includes(min) ? 1 : min,
+        max: [NaN, Infinity].includes(max) ? 1 : max,
+        total: [NaN, Infinity].includes(total) ? 1 : total,
+        avg: [NaN, Infinity].includes(avg) ? 1 : avg,
     }
 }
 
@@ -210,13 +210,13 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         const altitudeList = trackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
         const altitudeSummary = getSummaryFromList(altitudeList);
         // 兜底generic
-        const [sportType, subSportType] = getFitSportType(simplifyValue.sportType);
+        const [sportType, subSportType, sportName] = getFitSportType(simplifyValue.sportType);
 
 
         const fieldList = ['Field', 'Value', 'Units'];
         const keyList = ['Type', 'Local Number', 'Message'].concat(...Array(25).fill(1).map((_, index) => {
             const num = index + 1;
-            return fieldList.map(item => item + ' ' + num)
+            return fieldList.map(item => item ? (item + ' ' + num) : '')
         }))
 
         function gen(list) {
@@ -359,6 +359,123 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         if (simplifyValue.sportType === 283) {
             infoList.push(
               gen([
+                    ['Definition', 0, 'sport'],
+                    ['name', 128],
+                    ['sport', 1],
+                    ['sub_sport', 1],
+                ]
+              )
+            );
+            infoList.push(
+              gen([
+                    ['Data', 0, 'sport'],
+                    ['name', sportName],
+                    ['sport', sportType],
+                    ['sub_sport', subSportType],
+                ]
+              )
+            );
+
+            infoList.push(
+              gen([
+                    ['Definition', 0, 'device_info'],
+                    ['timestamp', 1],
+                    ['serial_number', 1],
+                    ['cum_operating_time', 1],
+                    ['manufacturer', 1],
+                    ['product', 1],
+                    ['software_version', 1],
+                    ['device_index', 1],
+                    ['device_type', 1],
+                    ['source_type', 1],
+                ]
+              )
+            );
+            infoList.push(
+              gen([
+                    ['Data', 0, 'device_info'],
+                    ['timestamp', endTimeFit],
+                    ['serial_number', 3425706245],
+                    ['manufacturer', 1],
+                    ['garmin_product', 3990],
+                    ['software_version', 17.26],
+                    ['device_index', 0],
+                    ['source_type', 5],
+                ]
+              )
+            );
+            infoList.push(
+              gen([
+                    ['Data', 0, 'device_info'],
+                    ['timestamp', endTimeFit],
+                    ['manufacturer', 1],
+                    ['garmin_product', 3990],
+                    ['software_version', 17.26],
+                    ['local_device_type', 4],
+                    ['device_index', 1],
+                    ['source_type', 5],
+                ]
+              )
+            );
+            infoList.push(
+              gen([
+                    ['Data', 0, 'device_info'],
+                    ['timestamp', endTimeFit],
+                    ['local_device_type', 8],
+                    ['device_index', 2],
+                    ['source_type', 5],
+                ]
+              )
+            );
+            infoList.push(
+              gen([
+                    ['Data', 0, 'device_info'],
+                    ['timestamp', endTimeFit],
+                    ['software_version', 0.06],
+                    ['local_device_type', 10],
+                    ['device_index', 3],
+                    ['source_type', 5],
+                ]
+              )
+            );
+            infoList.push(
+              gen([
+                    ['Data', 0, 'device_info'],
+                    ['timestamp', endTimeFit],
+                    ['manufacturer', 1],
+                    ['garmin_product', 3995],
+                    ['software_version', 17.16],
+                    ['local_device_type', 12],
+                    ['device_index', 4],
+                    ['source_type', 5],
+                ]
+              )
+            );
+
+            infoList.push(
+              gen([
+                    ['Definition', 0, 'developer_data_id'],
+                    ['developer_id', 16],
+                    ['application_id', 16],
+                    ['application_version', 1],
+                    ['manufacturer_id', 1],
+                    ['developer_data_index', 1],
+                ]
+              )
+            );
+            infoList.push(
+              gen([
+                    ['Data', 0, 'developer_data_id'],
+                    ['application_id', '202|176|1|181|3|76|74|207|133|114|202|100|8|0|183|162'],
+                    ['application_version', 15],
+                    ['developer_data_index', 0],
+                ]
+              )
+            );
+
+
+            infoList.push(
+              gen([
                   ['Definition', 0, 'field_description'],
                   ['field_name', 64, ''],
                   ['units', 16, ''],
@@ -367,51 +484,91 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['Data', 0, 'field_description'],
                   ['field_name', 'jump_mode', ''],
                   ['units', 'mode', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 1],
+                  ['fit_base_type_id', 7],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
                   ['field_name', 'total_time', ''],
                   ['units', 'mm:ss', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 2],
+                  ['fit_base_type_id', 7],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
                   ['field_name', 'active_time', ''],
                   ['units', 'mm:ss', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 3],
+                  ['fit_base_type_id', 7],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
                   ['field_name', 'reps', ''],
                   ['units', 'reps', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 4],
+                  ['fit_base_type_id', 132],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
-                  ['field_name', 'round', ''],
-                  ['units', 'round', ''],
+                  ['field_name', 'rounds', ''],
+                  ['units', 'rounds', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 5],
+                  ['fit_base_type_id', 132],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
                   ['field_name', 'average_reps', ''],
                   ['units', 'reps', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 6],
+                  ['fit_base_type_id', 132],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
                   ['field_name', 'Max_streaks', ''],
                   ['units', 'times', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 7],
+                  ['fit_base_type_id', 132],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
                   ['field_name', 'max_jump_rate', ''],
                   ['units', 'jpm', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 8],
+                  ['fit_base_type_id', 132],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
                   ['field_name', 'total_calories', ''],
                   ['units', 'kcal', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 9],
+                  ['fit_base_type_id', 132],
               ]),
               gen([
                   ['Data', 0, 'field_description'],
                   ['field_name', 'app_version', ''],
                   ['units', 'ver', ''],
+                  ['native_mesg_num', 18],
+                  ['developer_data_index', 0],
+                  ['field_definition_number', 10],
+                  ['fit_base_type_id', 7],
               ]),
             )
         }
@@ -515,7 +672,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                     list.push(
                       ['max_cadence', lapCadenceSummary.max, 'rpm'],
                       ['avg_cadence', lapCadenceSummary.avg, 'rpm'],
-                      ['avg_step_length', 1, 'mm'],
+                      ['avg_step_length', stepLengthAvg, 'mm'],
                     );
                 }
                 // 可能有的 心率信息
@@ -595,7 +752,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                   ['total_calories', parseInt(simplifyValue.totalCalories / 1000), 'kcal'],
                   ['max_cadence', cadenceSummary.max, 'rpm'],
                   ['avg_cadence', cadenceSummary.avg, 'rpm'],
-                  ['avg_step_length', 1, 'mm'],
+                  ['avg_step_length', stepLengthAvg, 'mm'],
                   ['max_heart_rate', simplifyValue.maxHeartRate, 'bpm'],
                   ['min_heart_rate', simplifyValue.minHeartRate, 'bpm'],
                   ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'],
@@ -610,8 +767,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         let poolLengthValueList = [];
 
         if (sportType === 5 && _source === 'xiaomi') {
-            poolLengthKeyList = ['pool_length', 1];
-            poolLengthValueList = ['pool_length', simplifyValue.pool_width, 'm'];
+            poolLengthKeyList = [['pool_length', 1]];
+            poolLengthValueList = [['pool_length', simplifyValue.pool_width, 'm']];
         }
 
         let jumpKeyList = [];
@@ -667,7 +824,8 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['max_altitude', 1],
               ['min_altitude', 1],
               ['avg_altitude', 1],
-              poolLengthKeyList,
+              ['sport_profile_name', 128],
+              ...poolLengthKeyList,
             ...jumpKeyList,
           ]),
           gen([
@@ -676,6 +834,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['start_time', startTimeFit],
               ['sport', sportType],
               ['sub_sport', subSportType],
+              ['sport_profile_name', sportName],
               ['total_elapsed_time', totalTimeSeconds, 's'],
               ['total_timer_time', totalTimeSeconds, 's'],
               ['total_distance', simplifyValue.totalDistance, 'm'],
@@ -688,10 +847,10 @@ function makeFIT(basePath, jsonFileName, totalLength) {
               ['avg_heart_rate', simplifyValue.avgHeartRate, 'bpm'],
               ['max_speed', speedSummary.max, 'm/s'],
               ['avg_speed', speedSummary.avg, 'm/s'],
-              ['max_altitude', 1, 'm'],
-              ['min_altitude', 1, 'm'],
-              ['avg_altitude', 1, 'm'],
-              poolLengthValueList,
+              ['max_altitude', altitudeSummary.max, 'm'],
+              ['min_altitude', altitudeSummary.min, 'm'],
+              ['avg_altitude', altitudeSummary.avg, 'm'],
+              ...poolLengthValueList,
               ...jumpValueList,
           ]),
         )
