@@ -48,7 +48,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
   const payment = requestBody.payment;
   const paid = requestBody.paid || 0;
   const ts = Date.now();
-  const fileName = 'fit_' + ts;
+  const fileName = 'fit_' + ts + (address === 'test' ? '_test' : '');
   dLog('log upload ', fileName, `[${address} ${type} ${payment} ${paid}]` );
   // code -1:有任务正在执行 1:预检通过 0:预检不通过
   if (checkLock()) {

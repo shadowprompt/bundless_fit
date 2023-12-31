@@ -47,15 +47,15 @@ function mkdirsSync(dirname) {
 }
 
 function getSummaryFromList(list) {
-    const max =  list.reduce((acc, [, value]) => Math.max(acc, value), 0);
+    const max =  list.reduce((acc, [, value]) => Math.max(acc, value), -Infinity);
     const min =  list.reduce((acc, [, value]) => Math.min(acc, value), Infinity);
     const total =  list.reduce((acc, [, value]) => acc + value * 1, 0);
     const avg = list.length > 0 ? (total / list.length).toFixed(3) : 0;
     return {
-        min: [NaN, Infinity].includes(min) ? 1 : min,
-        max: [NaN, Infinity].includes(max) ? 1 : max,
-        total: [NaN, Infinity].includes(total) ? 1 : total,
-        avg: [NaN, Infinity].includes(avg) ? 1 : avg,
+        min: [NaN, -Infinity, Infinity].includes(min) ? 0 : min,
+        max: [NaN, -Infinity, Infinity].includes(max) ? 0 : max,
+        total: [NaN, -Infinity, Infinity].includes(total) ? 0 : total,
+        avg: [NaN, -Infinity, Infinity].includes(avg) ? 0 : avg,
     }
 }
 
@@ -198,7 +198,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         const cadenceList = trackList.filter(item => item.Cadence).map(item => [1, item.Cadence]);
         const cadenceSummary = getSummaryFromList(cadenceList);
         // 根据距离、步频、时间推算出步幅
-        const stepLengthAvg = parseInt(simplifyValue.totalDistance / ((cadenceSummary.avg*2/60) * totalTimeSeconds) * 1000);
+        const stepLengthAvg = cadenceSummary.avg === 0 ? 0 : parseInt(simplifyValue.totalDistance / ((cadenceSummary.avg*2/60) * totalTimeSeconds) * 1000);
         // 心率 simplifyValue自带可直接使用
         const heartRateList = trackList.filter(item => item.HeartRateBpm).map(item => [1, item.HeartRateBpm]);
         const heartRateSummary = getSummaryFromList(heartRateList);
@@ -702,7 +702,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                       ['avg_step_length', '', 'mm'],
                     );
                 } else {
-                    const stepLengthAvg = parseInt(lapTotalDistance / ((lapCadenceSummary.avg * 2/60) * elapsedTimeSeconds) * 1000);
+                    const stepLengthAvg = lapCadenceSummary.avg === 0 ? 0 : parseInt(lapTotalDistance / ((lapCadenceSummary.avg * 2/60) * elapsedTimeSeconds) * 1000);
                     list.push(
                       ['max_cadence', lapCadenceSummary.max, 'rpm'],
                       ['avg_cadence', lapCadenceSummary.avg, 'rpm'],
