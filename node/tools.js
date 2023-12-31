@@ -217,7 +217,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
 
 
         const fieldList = ['Field', 'Value', 'Units'];
-        const keyList = ['Type', 'Local Number', 'Message'].concat(...Array(25).fill(1).map((_, index) => {
+        const keyList = ['Type', 'Local Number', 'Message'].concat(...Array(35).fill(1).map((_, index) => {
             const num = index + 1;
             return fieldList.map(item => item ? (item + ' ' + num) : '')
         }))
@@ -827,12 +827,12 @@ function makeFIT(basePath, jsonFileName, totalLength) {
                 ['total_time', formatSeconds(parseInt(simplifyValue.totalTime/1000)), 'mm:ss'], // 总时长
                 ['active_time', formatSeconds(parseInt(simplifyValue.totalTime/1000)), 'mm:ss'], // 跳绳时长
                 ['reps', data.skipNum, 'reps'], // 跳绳总次数
-                ['rounds', data.stumblingRope, 'rounds'], // 跳绳中断次数
-                ['average_reps', data.crossTrainerCadence, 'reps'], // ??
+                ['rounds', data.stumblingRope, 'rounds'], // 回合数
+                ['average_reps', parseInt(data.skipNum/data.stumblingRope), 'reps'], // 平均连跳次数/回合
                 ['Max_streaks', data.maxSkippingTimes, 'times'], // 最多连续跳绳次数
-                ['max_jump_rate', jumpRateSummary.max, 'jpm'], // 最大跳绳速度
+                ['max_jump_rate', jumpRateSummary.max, 'jpm'], // 最大跳绳速度, 佳明可能显示成 速度
                 ['total_calories', parseInt(simplifyValue.totalCalories/1000), 'kcal'],
-                ['app_version', 1, '1.0.0'],
+                ['app_version', '1.0.0', 'ver'],
             ];
         }
 
