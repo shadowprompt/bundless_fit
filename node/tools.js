@@ -59,7 +59,7 @@ function getSummaryFromList(list) {
     }
 }
 
-function runDirs(basePath, callback) {
+function runDirs(basePath, info, callback) {
     const jsonDirPath = basePath + '/json';
     let fileList = fs.readdirSync(jsonDirPath);
     fileList = fileList.filter(item => /\.json$/.test(item));
@@ -70,8 +70,8 @@ function runDirs(basePath, callback) {
     const jobQueue = [];
 
     fileList.forEach((item) => {
-        jobQueue.push(makeTCX(basePath, item, fileList.length));
-        jobQueue.push(makeFIT(basePath, item, fileList.length));
+        jobQueue.push(makeTCX(basePath, info, item, fileList.length));
+        jobQueue.push(makeFIT(basePath, info, item, fileList.length));
     });
 
     function runJob() {
@@ -92,7 +92,7 @@ function runDirs(basePath, callback) {
     runJob();
 }
 
-function makeTCX(basePath, jsonFileName, totalLength) {
+function makeTCX(basePath, info, jsonFileName, totalLength) {
     return () => {
         // 统一按类json同名文件命名
         const commonFileName = jsonFileName.replace(/\.json$/, '').replace(/\s+/, '_');
@@ -181,7 +181,7 @@ function makeTCX(basePath, jsonFileName, totalLength) {
     }
 }
 
-function makeFIT(basePath, jsonFileName, totalLength) {
+function makeFIT(basePath, info, jsonFileName, totalLength) {
     return () => {
         // 统一按类json同名文件命名
         const commonFileName = jsonFileName.replace(/\.json$/, '').replace(/\s+/, '_');
@@ -213,7 +213,7 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         const altitudeList = trackList.filter(item => item.AltitudeMeters).map(item => [1, item.AltitudeMeters * 1]);
         const altitudeSummary = getSummaryFromList(altitudeList);
         // 兜底generic
-        const [sportType, subSportType, sportName] = getFitSportType(simplifyValue.sportType);
+        const [sportType, subSportType, sportName] = getFitSportType(simplifyValue.sportType, info);
 
 
         const fieldList = ['Field', 'Value', 'Units'];
@@ -890,35 +890,50 @@ function makeFIT(basePath, jsonFileName, totalLength) {
         )
 
         return new Promise((resolve) => {
-            converter.json2csv(infoList, ((err, result) => {
-                // 先写入csv文件，在使用jar完整 csv2fit
-                fs.writeFileSync(`${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv`, result);
+          generateJson2Csv(infoList).then(result => {
+            // 先写入csv文件，在使用jar完整 csv2fit
+            fs.writeFileSync(`${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv`, result);
 
-                mkdirsSync(`${basePath}/fit/${simplifyValue.sportType}`);
-                // 在腾讯云linux上java的路径和本机mac不同
-                const javaPath = process.env.NODE_ENV === 'development' ? 'java' : '/usr/local/java/bin/java';
-                const jarPath = path.join(__dirname, './FitCSVTool.jar')
-                const command = `${javaPath} -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
-                // const command = `java -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
-                dLog('csv success', commonFileName, simplifyValue.sportType, address, `${fileCreatedCount}/${totalLength}`);
+            mkdirsSync(`${basePath}/fit/${simplifyValue.sportType}`);
+            // 在腾讯云linux上java的路径和本机mac不同
+            const javaPath = process.env.NODE_ENV === 'development' ? 'java' : '/usr/local/java/bin/java';
+            const jarPath = path.join(__dirname, './FitCSVTool.jar')
+            const command = `${javaPath} -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
+            // const command = `java -jar ${jarPath} -c "${basePath}/csv/${commonFileName}_${simplifyValue.sportType}.csv"  "${basePath}/fit/${simplifyValue.sportType}/${commonFileName}.fit"`;
+            dLog('csv success', commonFileName, simplifyValue.sportType, address, `${fileCreatedCount}/${totalLength}`);
 
-                exec(command, (error, stdout, stderr) => {
-                    if (!error && !stderr) {
-                        // 成功
-                        fileCreatedCount = fileCreatedCount + 1
-                        dLog('fit success', commonFileName, simplifyValue.sportType, address, `${fileCreatedCount}/${totalLength}`);
-                    } else {
-                        // 失败
-                        dLog('error', 'fit fail', command, fileCreatedCount, error);
-                        dLog('error', stderr);
-                    }
-                    resolve(command);
-                });
-            }), {
-                emptyFieldValue: ''
+            exec(command, (error, stdout, stderr) => {
+              if (!error && !stderr) {
+                // 成功
+                fileCreatedCount = fileCreatedCount + 1
+                dLog('fit success', commonFileName, simplifyValue.sportType, address, `${fileCreatedCount}/${totalLength}`);
+              } else {
+                // 失败
+                dLog('error', 'fit fail', command, fileCreatedCount, error);
+                dLog('error', stderr);
+              }
+              resolve(command);
             });
+          }).catch(err => {
+            console.log('makeFIT err ~ ', err);
+          });
         });
     };
+}
+
+/**
+ * 将json转换成可供写入的csv格式内容
+ * @param jsonData
+ * @returns {Promise<string>}
+ */
+function generateJson2Csv(jsonData) {
+  return new Promise((resolve) => {
+    const data = converter.json2csv(jsonData,  {
+      emptyFieldValue: '',
+      excelBOM: true,
+    });
+    resolve(data);
+  });
 }
 
 function pack(baseDir, info) {
@@ -926,7 +941,7 @@ function pack(baseDir, info) {
 
     mkdirsSync(path.join(baseDir, 'csv'));
     mkdirsSync(path.join(baseDir, 'fit'));
-    runDirs(baseDir, () => {
+    runDirs(baseDir, info, () => {
         packFiles();
         releaseLock();
     });
