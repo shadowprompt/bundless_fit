@@ -20,9 +20,27 @@ function getTcxSportType(value) {
   return resultMap[value] || resultMap['default'];
 }
 
-function getFitSportType(value) {
+/**
+ * 根据导入destination确定综合运动的不同处理
+ * @param value
+ * @returns {*|[number,number,string]}
+ */
+function getFitDefaultSportType(value) {
   const resultMap = {
-    default: [18, 0, '综合运动'], // 默认综合运动
+    default: [10, 26, '健身'], // 默认coros的健身
+    coros: [10, 26, '健身'],
+    garmin: [10, 26, '复合运动'],
+    strava: [10, 26, '复合运动'],
+    rqrun: [10, 26, '锻炼'],
+  };
+  return resultMap[value] || resultMap['default'];
+}
+
+function getFitSportType(value, info) {
+  const defaultSport = getFitDefaultSportType(info.destination);
+
+  const resultMap = {
+    default: defaultSport, // 默认综合运动
     258: [1, 0, '户外跑步'], // 户外跑步
     264: [1, 1, '室内跑步机'], // 室内跑步机
     259: [2, 0, '户外骑自行车'], // 户外骑自行车
@@ -34,7 +52,7 @@ function getFitSportType(value) {
     283: [10, 26, '跳绳'], // 跳绳->有氧训练
     273: [4, 15, '椭圆机'], // 椭圆机
     274: [15, 14, '划船机'], // 划船机
-    279: [18, 0, '综合运动'], // 综合运动
+    279: defaultSport, // 综合运动
   };
   return resultMap[value] || resultMap['default'];
 }
