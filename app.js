@@ -45,11 +45,12 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
   const requestBody =  req.body || {};
   const address = requestBody.address;
   const type = requestBody.type;
+  const destination = requestBody.destination;
   const payment = requestBody.payment;
   const paid = requestBody.paid || 0;
   const ts = Date.now();
   const fileName = 'fit_' + ts + (address === 'test' ? '_test' : '');
-  dLog('log upload ', fileName, `[${address} ${type} ${payment} ${paid}]` );
+  dLog('log upload ', fileName, `[${address} ${type} ${destination} ${payment} ${paid}]` );
   // code -1:有任务正在执行 1:预检通过 0:预检不通过
   if (checkLock()) {
     res.send({
@@ -63,6 +64,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
   record({
     address,
     type,
+    destination,
     fileName,
     payment,
     paid: paid * 1,
@@ -108,6 +110,7 @@ app.post('/upload', upload.array('zip_file', 1), function(req,res){
                 info: {
                   address,
                   type,
+                  destination,
                   payment,
                   paid: paid * 1,
                   baseFilePath,

@@ -4,8 +4,9 @@ import { Button, Input, message, Upload, Divider, Radio, List } from 'antd';
 
 import './app.scss';
 function App() {
-    const [type, setType] = useState('huawei');
     const [address, setAddress] = useState('');
+    const [type, setType] = useState('huawei');
+    const [destination, setDestination] = useState('coros');
     const [fileList, setFileList] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [payment, setPayment] = useState('alipay');
@@ -94,6 +95,9 @@ function App() {
     const onTypeChange = (e) => {
         setType(e.target.value);
     };
+    const onDestinationChange = (e) => {
+      setDestination(e.target.value);
+    };
     const onPaymentChange = (e) => {
       setPayment(e.target.value);
     };
@@ -102,13 +106,14 @@ function App() {
     };
     const handleUpload = () => {
         const formData = new FormData();
+        formData.append('address', address);
+        formData.append('type', type);
+        formData.append('destination', destination);
+        formData.append('payment', payment);
+        formData.append('paid', paid);
         fileList.forEach((file) => {
             formData.append('zip_file', file);
         });
-        formData.append('type', type);
-        formData.append('address', address);
-        formData.append('payment', payment);
-        formData.append('paid', paid);
         setUploading(true);
         // 指定本地开发和本服务器开发
         const targetUrl = window.location.href.includes('localhost')
@@ -246,8 +251,15 @@ function App() {
                     <div className="upload-intro">更多说明可以参考<a href="https://www.toutiao.com/article/7260290208145637929/" target="_blank" rel="noreferrer">华为、小米运动记录转fit和tcx格式工具转换效果展示及使用教程</a></div>
                 </div>
             </section>
+            <Divider>3. 导入目标</Divider>
+            <div className="upload-type">
+              <Radio.Group onChange={onDestinationChange} value={destination}>
+                <Radio value="coros">高驰</Radio>
+                <Radio value="garmin">佳明</Radio>
+              </Radio.Group>
+            </div>
 
-            <Divider>3. 支付方式</Divider>
+            <Divider>4. 支付方式</Divider>
             <div className="upload-type">
               <Radio.Group onChange={onPaymentChange} value={payment}>
                 <Radio value="alipay">支付宝</Radio>
@@ -255,12 +267,12 @@ function App() {
               </Radio.Group>
             </div>
 
-            <Divider>4. 支付金额</Divider>
+            <Divider>5. 支付金额</Divider>
             <div className="upload-type">
               <Input placeholder="输入金额" value={paid} onChange={onPaidChange}/>
             </div>
 
-            <Divider>5. 上传数据</Divider>
+            <Divider>6. 上传数据</Divider>
 
             <div className="upload-box">
               <Upload onRemove={onRemove} beforeUpload={beforeUpload} fileList={fileList} accept="zip" maxCount={1}>
