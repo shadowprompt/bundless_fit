@@ -256,6 +256,8 @@ function App() {
               <Radio.Group onChange={onDestinationChange} value={destination}>
                 <Radio value="coros">高驰</Radio>
                 <Radio value="garmin">佳明</Radio>
+                <Radio value="strava">Strava</Radio>
+                <Radio value="rqrun">RQrun</Radio>
               </Radio.Group>
             </div>
 
