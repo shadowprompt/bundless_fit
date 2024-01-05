@@ -6,6 +6,7 @@ const extract = require('extract-zip')
 const { dLog } = require('@daozhao/utils');
 
 const { mkdirsSync, pack} = require('./tools');
+const { readCsv } = require('./fsTools');
 const { getXiaomiSportType } = require('./config');
 
 const MINUTE_OFFSET = 6000; // 分钟误差（毫秒）
@@ -313,14 +314,15 @@ async function preCheck(filePath) {
 
 const list = [
     '1000-01-01 00:00:00',
-    '2020-01-15 00:00:00',
-    '2021-09-08 00:00:00',
+    '2020-10-04 00:00:00',
+    '2021-09-04 00:00:00',
+    '2022-08-27 00:00:00',
     '3000-12-26 00:00:00',
 ];
 
 // 运动记录太长是需要分段处理
 let sportSplitInfo;
-let sportSplitIndex = 2;
+let sportSplitIndex = 0;
 sportSplitInfo = {
     startTs: new Date(list[sportSplitIndex]).getTime(),
     endTs: new Date(list[sportSplitIndex + 1]).getTime(),
@@ -367,6 +369,8 @@ async function generate(dirs, info) {
         }
     }
     // fitness详情
+    readCsv(baseDir + '/' + FITNESS_FILE);
+    return;
     const workbookFitness = XLSX.readFile(baseDir + '/' + FITNESS_FILE, {cellDates: true, dateNF: "yyyy-mm-dd"});
     const sheetNameFitness = workbookFitness.SheetNames[0];
     const firstSheetFitness = workbookFitness.Sheets[sheetNameFitness];
