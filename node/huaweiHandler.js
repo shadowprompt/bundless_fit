@@ -163,6 +163,8 @@ async function collectData(motion, baseDir) {
                 targetTrack.Cadence = data.v;
             } else if(data.tp === 'cad') { // 椭圆机"步频"
                 targetTrack.Cadence = data.v;
+            } else if(data.tp === 'p-f') { //游泳划水"步频"
+                targetTrack.Cadence = data.v;
             } else if(data.tp === 'rs') { // 配速
                 targetTrack.Extensions = {
                     'ns3:TPX': {
@@ -171,6 +173,8 @@ async function collectData(motion, baseDir) {
                     }
                 }
                 targetTrack._speed = data.v; // 非TCX标准属性，仅为了取值方便
+            } else if(data.tp === 'swf') { // 游泳swoft
+                targetTrack._swf = data.v; // 非TCX标准属性
             } else if(data.tp === 'scp') { // 跳绳速度
                 targetTrack._jumpRate = data.v; // 非TCX标准属性
             } else if(data.tp === 'alti') { // 海拔，如果前面有海拔信息，以此处为准
