@@ -29,8 +29,8 @@ function getFitDefaultSportType(value) {
   const resultMap = {
     default: [10, 26, '健身'], // 默认coros的健身
     coros: [10, 26, '健身'],
-    garmin: [10, 26, '复合运动'],
-    strava: [10, 26, '复合运动'],
+    garmin: [18, 0, '复合运动'],
+    strava: [18, 0, '复合运动'],
     rqrun: [10, 26, '锻炼'],
   };
   return resultMap[value] || resultMap['default'];
