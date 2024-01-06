@@ -142,9 +142,22 @@ function collectDetailMap(sportInfo, workSheetInfo, collection) {
     let { startTs, endTs, sportStartTime } = sportInfo;
 
     const sheetList = ['B', 'C', 'E'];
+    // 根据一头一尾先确定数据sheetList是顺序还是逆序的
+    let offset = 0;
+    let [, , firstValue] = getValue(sheetList.map(item => item + '' + workSheetInfo.startNum), workSheetInfo.firstSheet);
+    let [, , endValue] = getValue(sheetList.map(item => item + '' + workSheetInfo.endNum), workSheetInfo.firstSheet);
+    if (firstValue.time > endValue.time) {
+        // 逆序
+        offset = workSheetInfo.startNum + workSheetInfo.endNum;
+    }
+
 
     for ( ;workSheetInfo.startNum <= workSheetInfo.endNum; workSheetInfo.startNum++) {
-        let [Sid, Key, Value] = getValue(sheetList.map(item => item + '' + workSheetInfo.startNum), workSheetInfo.firstSheet);
+        const index = offset
+          ? offset - workSheetInfo.startNum
+          : workSheetInfo.startNum;
+
+        let [Sid, Key, Value] = getValue(sheetList.map(item => item + '' + index), workSheetInfo.firstSheet);
         // 当期类型记录项的发生时间
         let _ts = Value.time * 1000;
 
@@ -255,7 +268,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         avgHeartRate: avgHeartRate || heartRateSummary.avg, // 优先使用数据自带的
         maxHeartRate: maxHeartRate || heartRateSummary.max,
         sportType: getXiaomiSportType(sportType, protoType),
-        pool_width: sportInfo.pool_width,
+        pool_width: sportInfo.pool_width || 20, // 加入兜底值，避免为0引起计算游泳圈数时除数为0了
         turn_count: sportInfo.turn_count,
         stroke_count: sportInfo.stroke_count,
         max_stroke_freq: sportInfo.max_stroke_freq,
@@ -369,8 +382,8 @@ async function generate(dirs, info) {
         }
     }
     // fitness详情
-    readCsv(baseDir + '/' + FITNESS_FILE);
-    return;
+    // readCsv(baseDir + '/' + FITNESS_FILE);
+    // return;
     const workbookFitness = XLSX.readFile(baseDir + '/' + FITNESS_FILE, {cellDates: true, dateNF: "yyyy-mm-dd"});
     const sheetNameFitness = workbookFitness.SheetNames[0];
     const firstSheetFitness = workbookFitness.Sheets[sheetNameFitness];
