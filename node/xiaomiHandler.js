@@ -160,6 +160,28 @@ function collectDetailMap(sportInfo, workSheetInfo, collection) {
     return collection;
 }
 
+function collectDetailMapNew (sportInfo, workSheetInfo, collection) {
+    let { startTs, endTs, sportStartTime } = sportInfo;
+
+    for ( ;workSheetInfo.startNum <= workSheetInfo.endNum; workSheetInfo.startNum++) {
+        const dataItem = workSheetInfo.list[workSheetInfo.startNum];
+        let {Sid, Key, Value} = dataItem;
+        Value = Value.includes('{') ? JSON.parse(Value) : Value;
+        // 当期类型记录项的发生时间
+        let _ts = Value.time * 1000;
+
+        if ( _ts >= startTs && _ts <= endTs) {
+            setData(Key, collection, Value, sportStartTime, Sid);
+        }
+        // 时间已经超过结束时间
+        if (_ts > endTs) {
+            workSheetInfo.startNum--; // 回退到上一个
+            break;
+        }
+    }
+    return collection;
+}
+
 function toUTCTimeStr({year, month, day, hours, minutes, seconds}) {
     return new Date(`${year}-${month}-${day} ${hours}:${minutes}:${seconds}`).toISOString();
 }
@@ -369,22 +391,27 @@ async function generate(dirs, info) {
         }
     }
     // fitness详情
-    readCsv(baseDir + '/' + FITNESS_FILE);
-    return;
-    const workbookFitness = XLSX.readFile(baseDir + '/' + FITNESS_FILE, {cellDates: true, dateNF: "yyyy-mm-dd"});
-    const sheetNameFitness = workbookFitness.SheetNames[0];
-    const firstSheetFitness = workbookFitness.Sheets[sheetNameFitness];
-    const refInfoFitness = firstSheetFitness['!ref'];
-    const { startNum: startNumFitness, endNum: endNumFitness  } = getRefInfo(refInfoFitness);
+    const list = await readCsv(baseDir + '/' + FITNESS_FILE);
     const worksheetInfoHeartRateAuto = {
-        startNum: startNumFitness,
-        endNum: endNumFitness,
-        firstSheet: firstSheetFitness,
-    };
+        startNum: 0,
+        endNum: list.length - 1,
+        list,
+    }
+
+    // const workbookFitness = XLSX.readFile(baseDir + '/' + FITNESS_FILE, {cellDates: true, dateNF: "yyyy-mm-dd"});
+    // const sheetNameFitness = workbookFitness.SheetNames[0];
+    // const firstSheetFitness = workbookFitness.Sheets[sheetNameFitness];
+    // const refInfoFitness = firstSheetFitness['!ref'];
+    // const { startNum: startNumFitness, endNum: endNumFitness  } = getRefInfo(refInfoFitness);
+    // const worksheetInfoHeartRateAuto = {
+    //     startNum: startNumFitness,
+    //     endNum: endNumFitness,
+    //     firstSheet: firstSheetFitness,
+    // };
     // 第一次迭代收集具体数据
     sportIterator((sportInfo) => {
         // 收集各sport期间的具体信息（心率、步数等）
-        collectDetailMap(sportInfo, worksheetInfoHeartRateAuto, collection);
+        collectDetailMapNew(sportInfo, worksheetInfoHeartRateAuto, collection);
     })
     dLog('sportIterator 1st completed', Object.keys(collection).length);
 
