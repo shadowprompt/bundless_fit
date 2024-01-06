@@ -1,5 +1,5 @@
 const os = require('os');
-const { makeFIT, mkdirsSync} = require('./tools');
+const { makeFIT, mkdirsSync, pack} = require('./tools');
 const { parser } = require('./xiaomiHandler');
 
 // function debug() {
@@ -35,4 +35,19 @@ function debugXiaomiParser() {
   parser(evt);
 }
 
-debugXiaomiParser();;
+// debugXiaomiParser();
+
+function debugPack() {
+  const fileName = 'fit_' + Date.now();
+  const baseFilePath = 'D:/Dev/原始数据/debug';
+  pack(baseFilePath, {
+    address: 'address',
+    type: 'xiaomi',
+    payment: 'alipay',
+    paid: 5,
+    fileName,
+    destination: 'huawei',
+  });
+}
+
+debugPack();
