@@ -1,39 +1,14 @@
 const fs = require('fs');
 const path = require('path');
-const XLSX = require('xlsx');
 const extract = require('extract-zip')
 
 const { dLog } = require('@daozhao/utils');
 
 const { mkdirsSync, pack} = require('./tools');
-const { readCsv } = require('./fsTools');
+const { readCsv, getListOrderInfo } = require('./fsTools');
 const { getXiaomiSportType } = require('./config');
 
 const MINUTE_OFFSET = 6000; // 分钟误差（毫秒）
-
-function getRefInfo(ref) {
-    const [startCellName, endCellName] = ref.split(':');
-    const startNum = startCellName.split(/[A-Z]/)[1];
-    const startLetter = startCellName.replace(startNum, '');
-    const endNum = endCellName.split(/[A-Z]/)[1];
-    const endLetter = endCellName.replace(endNum, '');
-    return {
-        startNum: startNum * 1 + 1, // 第一行为表头信息，直接从下一行开始
-        startLetter,
-        endNum: endNum * 1,
-        endLetter
-    };
-}
-
-function getItem(result) {
-    const value = ((result && result.v || '') + '').trim();
-    // value为json字符串时，转换成json对象
-    return value.includes('{') ? JSON.parse(value) : value;
-}
-
-function getValue(sheetList, sheet) {
-    return sheetList.map(item => getItem(sheet[`${item}`]))
-}
 
 function getDateTime(s) {
     const d = new Date(s);
@@ -106,7 +81,8 @@ function setData(key, collection, Value, sportStartTime, Sid) {
 }
 
 function combineSportInfo(sport) {
-    let [Uid, Sid, Key, Time, Category, Value, ...rest] = sport;
+    let { Value } = sport;
+    Value = Value.includes('{') ? JSON.parse(Value) : Value;
     const sportStartTime = Value.start_time * 1000;
     const sportEndTime = Value.end_time * 1000;
     const sportTime = Value.duration;
@@ -138,46 +114,27 @@ function combineSportInfo(sport) {
     };
 }
 
-function collectDetailMap(sportInfo, workSheetInfo, collection) {
-    let { startTs, endTs, sportStartTime } = sportInfo;
+function collectDetailMap (sportInfo, list, collection) {
+    let { startTs, endTs, sportStartTime, sportTime } = sportInfo;
 
-    const sheetList = ['B', 'C', 'E'];
     // 根据一头一尾先确定数据sheetList是顺序还是逆序的
-    let offset = 0;
-    let [, , firstValue] = getValue(sheetList.map(item => item + '' + workSheetInfo.startNum), workSheetInfo.firstSheet);
-    let [, , endValue] = getValue(sheetList.map(item => item + '' + workSheetInfo.endNum), workSheetInfo.firstSheet);
-    if (firstValue.time > endValue.time) {
-        // 逆序
-        offset = workSheetInfo.startNum + workSheetInfo.endNum;
-    }
+    const listInfo = getListOrderInfo(list, (startDataItem, endDataItem) => {
+        let startValue = startDataItem.Value;
+        startValue = startValue.includes('{') ? JSON.parse(startValue) : startValue;
+        let endValue = endDataItem.Value;
+        endValue = endValue.includes('{') ? JSON.parse(endValue) : endValue;
+        return startValue.time > endValue.time ? 'desc' : 'asc';
+    });
+
+    dLog('listInfo', sportTime, listInfo.startNum, listInfo.endNum, listInfo.ascOffset);
+
+    for ( ;listInfo.startNum <= listInfo.endNum; listInfo.startNum++) {
+        const index = listInfo.ascOffset
+          ? listInfo.ascOffset - listInfo.startNum
+          : listInfo.startNum;
 
 
-    for ( ;workSheetInfo.startNum <= workSheetInfo.endNum; workSheetInfo.startNum++) {
-        const index = offset
-          ? offset - workSheetInfo.startNum
-          : workSheetInfo.startNum;
-
-        let [Sid, Key, Value] = getValue(sheetList.map(item => item + '' + index), workSheetInfo.firstSheet);
-        // 当期类型记录项的发生时间
-        let _ts = Value.time * 1000;
-
-        if ( _ts >= startTs && _ts <= endTs) {
-            setData(Key, collection, Value, sportStartTime, Sid);
-        }
-        // 时间已经超过结束时间
-        if (_ts > endTs) {
-            workSheetInfo.startNum--; // 回退到上一个
-            break;
-        }
-    }
-    return collection;
-}
-
-function collectDetailMapNew (sportInfo, workSheetInfo, collection) {
-    let { startTs, endTs, sportStartTime } = sportInfo;
-
-    for ( ;workSheetInfo.startNum <= workSheetInfo.endNum; workSheetInfo.startNum++) {
-        const dataItem = workSheetInfo.list[workSheetInfo.startNum];
+        const dataItem = list[index];
         let {Sid, Key, Value} = dataItem;
         Value = Value.includes('{') ? JSON.parse(Value) : Value;
         // 当期类型记录项的发生时间
@@ -188,7 +145,7 @@ function collectDetailMapNew (sportInfo, workSheetInfo, collection) {
         }
         // 时间已经超过结束时间
         if (_ts > endTs) {
-            workSheetInfo.startNum--; // 回退到上一个
+            listInfo.startNum--; // 回退到上一个
             break;
         }
     }
@@ -270,7 +227,6 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
             hasData = true;
             trackpoint.Cadence = parseInt(targetStepList[0][1] / 2);
         }
-        dLog(`${year}-${month}-${day} ${hours}:${minutes}`, targetHeartRateList.join('='), targetStepList.join('='));
 
         return trackpoint;
         if (hasData) {
@@ -290,7 +246,7 @@ function collectData(sportInfo, baseDir, detailJsonObj) {
         avgHeartRate: avgHeartRate || heartRateSummary.avg, // 优先使用数据自带的
         maxHeartRate: maxHeartRate || heartRateSummary.max,
         sportType: getXiaomiSportType(sportType, protoType),
-        pool_width: sportInfo.pool_width || 20, // 加入兜底值，避免为0引起计算游泳圈数时除数为0了
+        pool_width: sportInfo.pool_width || 25, // 加入兜底值，避免为0引起计算游泳圈数时除数为0了
         turn_count: sportInfo.turn_count,
         stroke_count: sportInfo.stroke_count,
         max_stroke_freq: sportInfo.max_stroke_freq,
@@ -347,22 +303,6 @@ async function preCheck(filePath) {
     }
 }
 
-const list = [
-    '1000-01-01 00:00:00',
-    '2020-10-04 00:00:00',
-    '2021-09-04 00:00:00',
-    '2022-08-27 00:00:00',
-    '3000-12-26 00:00:00',
-];
-
-// 运动记录太长是需要分段处理
-let sportSplitInfo;
-let sportSplitIndex = 0;
-sportSplitInfo = {
-    startTs: new Date(list[sportSplitIndex]).getTime(),
-    endTs: new Date(list[sportSplitIndex + 1]).getTime(),
-};
-
 async function generate(dirs, info) {
     const [baseDir, SPORT_FILE, FITNESS_FILE] = dirs;
 
@@ -373,58 +313,24 @@ async function generate(dirs, info) {
         return
     }
 
-    const sportPath = baseDir + '/' + SPORT_FILE;
-
-    const sportWorkbook = XLSX.readFile(sportPath, {cellDates: true, dateNF: "yyyy-mm-dd"});
-    const sportSheetName = sportWorkbook.SheetNames[0];
-    const sportFirstSheet = sportWorkbook.Sheets[sportSheetName];
-
-    const sportSheetList = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-    // const [_Uid, _Sid, _Key, _Time, _Category, _Value, _UpdateTime] = sportSheetList;
     // 心率 步数等集合
     const collection = {};
+    // sport列表
+    const sportList = await readCsv(baseDir + '/' + SPORT_FILE);
+    // fitness详情
+    const fitnessList = await readCsv(baseDir + '/' + FITNESS_FILE);
 
     function sportIterator(iterator) {
-        const refInfo = sportFirstSheet['!ref'];
-        const { startNum, endNum } = getRefInfo(refInfo);
-        // sport数据默认是升序，直接使用
-        for (let keyNumber = startNum;keyNumber <= endNum; keyNumber++) {
-            // 遍历sport
-            const sport = getValue(sportSheetList.map(item => item + '' + keyNumber), sportFirstSheet);
+        sportList.forEach((sport) => {
             const sportInfo = combineSportInfo(sport);
-            // 数据量过大时采用分段模式
-            if (sportSplitInfo) {
-                // 分段模式 介于分段时间内才进行遍历
-                if (sportInfo.startTs <= sportSplitInfo.endTs && sportInfo.startTs >= sportSplitInfo.startTs) {
-                    iterator(sportInfo);
-                }
-            } else {
-                iterator(sportInfo);
-            }
-        }
-    }
-    // fitness详情
-    const list = await readCsv(baseDir + '/' + FITNESS_FILE);
-    const worksheetInfoHeartRateAuto = {
-        startNum: 0,
-        endNum: list.length - 1,
-        list,
+            iterator(sportInfo);
+        });
     }
 
-    // const workbookFitness = XLSX.readFile(baseDir + '/' + FITNESS_FILE, {cellDates: true, dateNF: "yyyy-mm-dd"});
-    // const sheetNameFitness = workbookFitness.SheetNames[0];
-    // const firstSheetFitness = workbookFitness.Sheets[sheetNameFitness];
-    // const refInfoFitness = firstSheetFitness['!ref'];
-    // const { startNum: startNumFitness, endNum: endNumFitness  } = getRefInfo(refInfoFitness);
-    // const worksheetInfoHeartRateAuto = {
-    //     startNum: startNumFitness,
-    //     endNum: endNumFitness,
-    //     firstSheet: firstSheetFitness,
-    // };
     // 第一次迭代收集具体数据
     sportIterator((sportInfo) => {
         // 收集各sport期间的具体信息（心率、步数等）
-        collectDetailMapNew(sportInfo, worksheetInfoHeartRateAuto, collection);
+        collectDetailMap(sportInfo, fitnessList, collection);
     })
     dLog('sportIterator 1st completed', Object.keys(collection).length);
 
